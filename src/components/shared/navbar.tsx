@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
 import { MagneticButton } from "@/components/shared/magnetic-button"
 
-const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60123456789"
+const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60183823063"
 const waMessage = encodeURIComponent(
   "Hi Irfan, I have a project in mind and would like to discuss it.",
 )
@@ -24,25 +26,60 @@ function scrollTo(id: string) {
   if (el) el.scrollIntoView({ behavior: "smooth" })
 }
 
-export function Navbar() {
+function useActiveSection() {
   const [active, setActive] = useState("")
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const rafRef = useRef<number | null>(null)
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActive(entry.target.id)
+    function update() {
+      const anchor = window.innerHeight * 0.35
+      let closest = ""
+      let closestDist = Infinity
+
+      for (const s of sections) {
+        const el = document.getElementById(s.id)
+        if (!el) continue
+        const rect = el.getBoundingClientRect()
+        const dist = Math.abs(rect.top - anchor)
+        if (dist < closestDist) {
+          closestDist = dist
+          closest = s.id
         }
-      },
-      { rootMargin: "-40% 0px -50% 0px", threshold: 0 },
-    )
-    for (const s of sections) {
-      const el = document.getElementById(s.id)
-      if (el) observer.observe(el)
+      }
+
+      setActive(closest)
+      rafRef.current = null
     }
-    return () => observer.disconnect()
+
+    function onScroll() {
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(update)
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    onScroll()
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
   }, [])
+
+  return [active, setActive] as const
+}
+
+export function Navbar() {
+  const pathname = usePathname()
+  const [active, setActive] = useActiveSection()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const handleNav = useCallback(
+    (id: string) => {
+      setActive(id)
+      scrollTo(id)
+    },
+    [setActive],
+  )
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
   const toggleMobile = useCallback(() => setMobileOpen((v) => !v), [])
@@ -60,9 +97,11 @@ export function Navbar() {
     }
   }, [mobileOpen, closeMobile])
 
+  if (pathname.startsWith("/work/")) return null
+
   return (
     <>
-      <DesktopNav active={active} />
+      <DesktopNav active={active} onNav={handleNav} />
       <button
         onClick={toggleMobile}
         className="fixed right-4 top-4 z-50 flex h-11 w-11 items-center justify-center border border-zinc-800 bg-zinc-950 md:hidden"
@@ -83,7 +122,7 @@ export function Navbar() {
               className="fixed inset-0 z-30 bg-zinc-950/60 md:hidden"
               onClick={closeMobile}
             />
-            <MobileDrawer onNav={closeMobile} />
+            <MobileDrawer active={active} onNav={handleNav} onClose={closeMobile} />
           </>
         )}
       </AnimatePresence>
@@ -91,7 +130,7 @@ export function Navbar() {
   )
 }
 
-function DesktopNav({ active }: { active: string }) {
+function DesktopNav({ active, onNav }: { active: string; onNav: (id: string) => void }) {
   return (
     <nav className="fixed left-6 top-1/2 z-50 hidden -translate-y-1/2 md:block">
       <div className="flex flex-col items-center gap-5">
@@ -105,7 +144,7 @@ function DesktopNav({ active }: { active: string }) {
         {sections.map((s) => (
           <button
             key={s.id}
-            onClick={() => scrollTo(s.id)}
+            onClick={() => onNav(s.id)}
             className="group flex cursor-pointer items-center gap-3 py-1.5"
           >
             <span
@@ -131,9 +170,13 @@ function DesktopNav({ active }: { active: string }) {
 }
 
 function MobileDrawer({
+  active,
   onNav,
+  onClose,
 }: {
+  active: string
   onNav: (id: string) => void
+  onClose: () => void
 }) {
   return (
     <motion.div
@@ -152,10 +195,13 @@ function MobileDrawer({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.04, duration: 0.25 }}
             onClick={() => {
-              scrollTo(s.id)
               onNav(s.id)
+              onClose()
             }}
-            className="text-left text-xl font-bold tracking-tight text-zinc-300 transition-colors hover:text-white"
+            className={cn(
+              "text-left text-xl font-bold tracking-tight transition-colors",
+              active === s.id ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-300",
+            )}
           >
             {s.label}
           </motion.button>

@@ -2,11 +2,11 @@
 
 import { motion } from "framer-motion"
 import { MessageSquare, ArrowRight } from "lucide-react"
-import { SectionShell, SectionHeading } from "@/components/shared/section-shell"
+import { SectionShell, SectionHeading, SectionWatermark } from "@/components/shared/section-shell"
 import { MagneticButton } from "@/components/shared/magnetic-button"
 import { profile } from "@/data/profile"
 
-const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60123456789"
+const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60183823063"
 const waMessage = encodeURIComponent(
   "Hi Irfan, I have a project in mind and would like to discuss it.",
 )
@@ -14,10 +14,7 @@ const waUrl = `https://wa.me/${waNumber}?text=${waMessage}`
 export function ContactSection() {
   return (
     <SectionShell id="contact" className="relative">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[clamp(80px,14vw,200px)] font-black text-white/[0.03]">
-        CONTACT
-      </div>
-
+      <SectionWatermark>CONTACT</SectionWatermark>
       <div className="mx-auto max-w-xl text-center">
         <motion.div
           initial={{ opacity: 0, y: 16 }}

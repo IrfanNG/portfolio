@@ -1,10 +1,19 @@
 export interface Project {
   title: string
+  slug: string
   category: string
   description: string
   techStack: string[]
   image: string
+  previewType: "web" | "mobile"
   status: "live" | "development" | "archived"
+  role: string
+  year: string
+  overview: string
+  problem: string
+  solution: string
+  features: string[]
+  outcome: string
   liveUrl?: string
   githubUrl?: string
 }

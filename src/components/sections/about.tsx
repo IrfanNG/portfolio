@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { motion } from "framer-motion"
-import { SectionShell, SectionHeading } from "@/components/shared/section-shell"
+import { SectionShell, SectionHeading, SectionWatermark } from "@/components/shared/section-shell"
 import { profile } from "@/data/profile"
 
 const techStack = ["Next.js", "React", "TypeScript", "Tailwind", "Node.js"]
@@ -10,10 +10,7 @@ const techStack = ["Next.js", "React", "TypeScript", "Tailwind", "Node.js"]
 export function AboutSection() {
   return (
     <SectionShell id="about" className="relative">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[clamp(80px,14vw,200px)] font-black text-white/[0.03]">
-        ABOUT
-      </div>
-
+      <SectionWatermark>ABOUT</SectionWatermark>
       <SectionHeading label="About" title="The Developer Behind the Code" />
 
       <div className="grid gap-10 md:grid-cols-2 md:gap-16">

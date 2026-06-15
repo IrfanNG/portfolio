@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
-import { SectionShell, SectionHeading } from "@/components/shared/section-shell"
+import { SectionShell, SectionHeading, SectionWatermark } from "@/components/shared/section-shell"
 import { processSteps } from "@/data/process"
 
 const num = (i: number) => String(i).padStart(2, "0")
@@ -18,10 +18,7 @@ export function ProcessSection() {
 
   return (
     <SectionShell id="process" className="relative">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[clamp(80px,14vw,200px)] font-black text-white/[0.03]">
-        PROCESS
-      </div>
-
+      <SectionWatermark>PROCESS</SectionWatermark>
       <SectionHeading label="Process" title="How I Work" />
 
       <div ref={containerRef} className="relative mx-auto max-w-3xl">

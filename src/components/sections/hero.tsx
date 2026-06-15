@@ -1,13 +1,13 @@
 "use client"
 
-import { ArrowRight, Sparkles } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
 import { MagneticButton } from "@/components/shared/magnetic-button"
 import { AnimatedText } from "@/components/shared/animated-text"
 import { WebGLHero } from "@/components/webgl/webgl-hero"
 import { profile } from "@/data/profile"
 
-const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60123456789"
+const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60183823063"
 const waMessage = encodeURIComponent(
   "Hi Irfan, I'm interested in building a website/system. Can we discuss?",
 )
@@ -21,7 +21,7 @@ export function HeroSection() {
     >
       <WebGLHero />
 
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[clamp(120px,20vw,280px)] font-black text-white/5">
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[clamp(120px,20vw,280px)] font-black text-white/10">
         DEVELOPER
       </div>
 
@@ -31,9 +31,8 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.25, 0.1, 0, 1] }}
-            className="mb-4 inline-flex items-center gap-2 text-xs text-zinc-500"
+            className="mb-4 text-xs text-zinc-500"
           >
-            <Sparkles className="h-3 w-3 text-blue-400" />
             Available for freelance projects
           </motion.div>
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { SectionShell, SectionHeading } from "@/components/shared/section-shell"
+import { SectionShell, SectionHeading, SectionWatermark } from "@/components/shared/section-shell"
 import { services } from "@/data/services"
 import type { Service } from "@/types"
 
@@ -57,10 +57,7 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
 export function ServicesSection() {
   return (
     <SectionShell id="services">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[clamp(80px,14vw,200px)] font-black text-white/[0.03]">
-        SERVICES
-      </div>
-
+      <SectionWatermark>SERVICES</SectionWatermark>
       <SectionHeading label="Services" title="What I Can Do For You" />
 
       <div className="grid gap-6 md:grid-cols-3">

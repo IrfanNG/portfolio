@@ -4,7 +4,7 @@ export const profile: Profile = {
   name: "Irfan Ariff",
   role: "Software Developer",
   tagline: "I design and build high-performance websites, web apps, and full-stack systems for businesses that need more than templates.",
-  location: "Malaysia",
+  location: "Kuala Lumpur",
   email: "hello@irfanariff.com",
   whatsappNumberEnvKey: "NEXT_PUBLIC_WHATSAPP_NUMBER",
   socialLinks: [

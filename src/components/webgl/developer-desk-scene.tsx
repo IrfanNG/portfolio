@@ -14,6 +14,7 @@ function seededRandom(seed: number) {
 
 function Particles({ count = 200 }: { count?: number }) {
   const meshRef = useRef<THREE.Points>(null!)
+  const elapsedRef = useRef(0)
 
   const geometry = useMemo(() => {
     const r = seededRandom(42)
@@ -33,11 +34,12 @@ function Particles({ count = 200 }: { count?: number }) {
     return Float32Array.from({ length: count }, () => 0.001 + r() * 0.003)
   }, [count])
 
-  useFrame(({ clock, pointer }) => {
+  useFrame(({ pointer }, delta) => {
     if (!meshRef.current) return
+    elapsedRef.current += delta
     const attr = meshRef.current.geometry.attributes.position
     const array = attr.array as Float32Array
-    const time = clock.getElapsedTime()
+    const time = elapsedRef.current
     const px = pointer.x * 4
     const py = pointer.y * 3
 
