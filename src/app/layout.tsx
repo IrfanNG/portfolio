@@ -15,9 +15,37 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Irfan Ariff | Full-Stack Developer",
+  metadataBase: new URL("https://irfanariff.com"),
+  title: "Irfan Ariff — Software Developer",
   description:
-    "Premium full-stack developer building WebGL interfaces, landing pages, and production-grade systems. Available for freelance projects.",
+    "I build websites, web apps, dashboards, and full-stack systems for businesses.",
+  openGraph: {
+    title: "Irfan Ariff — Software Developer",
+    description:
+      "Websites, web apps, dashboards, and full-stack systems for businesses.",
+    url: "https://irfanariff.com",
+    siteName: "Irfan Ariff",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Irfan Ariff — Software Developer",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Irfan Ariff — Software Developer",
+    description:
+      "I build websites, web apps, dashboards, and full-stack systems for businesses.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: "/file.svg",
+  },
 }
 
 export default function RootLayout({
