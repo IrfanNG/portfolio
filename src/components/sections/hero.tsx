@@ -1,10 +1,12 @@
 "use client"
 
+import { useRef } from "react"
 import { ArrowRight } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, useInView } from "framer-motion"
 import { MagneticButton } from "@/components/shared/magnetic-button"
 import { AnimatedText } from "@/components/shared/animated-text"
 import { WebGLHero } from "@/components/webgl/webgl-hero"
+import { useReducedMotion } from "@/components/providers/reduced-motion-provider"
 import { profile } from "@/data/profile"
 
 const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60183823063"
@@ -14,15 +16,35 @@ const waMessage = encodeURIComponent(
 const waUrl = waNumber ? `https://wa.me/${waNumber}?text=${waMessage}` : null
 
 export function HeroSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const { prefersReducedMotion } = useReducedMotion()
+
+  const isInView = useInView(sectionRef, { amount: 0.45 })
+
   return (
     <section
+      ref={sectionRef}
       id="hero-section"
       className="relative min-h-screen overflow-hidden"
     >
       <WebGLHero />
 
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[clamp(120px,20vw,280px)] font-black text-white/10">
-        DEVELOPER
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none whitespace-nowrap text-[clamp(120px,20vw,280px)] font-black text-white/10">
+        {prefersReducedMotion ? (
+          "DEVELOPER"
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.55, y: -120, filter: "blur(14px)" }}
+            animate={
+              isInView
+                ? { opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }
+                : { opacity: 0, scale: 0.55, y: -120, filter: "blur(14px)" }
+            }
+            transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
+          >
+            DEVELOPER
+          </motion.div>
+        )}
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-6 md:px-8">
