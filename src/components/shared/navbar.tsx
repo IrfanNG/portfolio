@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { MagneticButton } from "@/components/shared/magnetic-button"
+import { useReducedMotion } from "@/components/providers/reduced-motion-provider"
 
 const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60183823063"
 const waMessage = encodeURIComponent(
@@ -131,8 +132,89 @@ export function Navbar() {
 }
 
 function DesktopNav({ active, onNav }: { active: string; onNav: (id: string) => void }) {
+  const { prefersReducedMotion } = useReducedMotion()
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const lineRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const labelRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const rafRef = useRef<number | null>(null)
+
+  const resetProximity = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+    sections.forEach((s, i) => {
+      const line = lineRefs.current[i]
+      const label = labelRefs.current[i]
+      if (!line || !label) return
+      const isActive = s.id === active
+      line.style.width = isActive ? "24px" : "12px"
+      line.style.background = isActive ? "rgba(59,130,246,0.6)" : "rgba(63,63,70,1)"
+      label.style.color = isActive ? "rgba(148,163,184,1)" : "rgba(113,113,122,1)"
+      label.style.opacity = isActive ? "1" : "0.5"
+    })
+  }, [active])
+
+  const updateProximity = useCallback(
+    (pointerY: number) => {
+      const maxDist = 120
+      sections.forEach((s, i) => {
+        const el = itemRefs.current[i]
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const centerY = rect.top + rect.height / 2
+        const distance = Math.abs(pointerY - centerY)
+        const raw = Math.max(0, 1 - distance / maxDist)
+        const factor = raw * raw * (3 - 2 * raw)
+
+        const line = lineRefs.current[i]
+        const label = labelRefs.current[i]
+        if (!line || !label) return
+
+        const isActive = s.id === active
+        const restingWidth = isActive ? 24 : 12
+        line.style.width = `${restingWidth + factor * (32 - restingWidth)}px`
+
+        const lr = Math.round(63 + factor * (59 - 63))
+        const lg = Math.round(63 + factor * (130 - 63))
+        const lb = Math.round(70 + factor * (246 - 70))
+        const la = isActive ? 0.6 + factor * 0.4 : 1 - factor * 0.4
+        line.style.background = `rgba(${lr},${lg},${lb},${la})`
+
+        const emphasis = isActive ? 1 : factor
+        const rr = Math.round(113 + emphasis * (148 - 113))
+        const rg = Math.round(113 + emphasis * (163 - 113))
+        const rb = Math.round(122 + emphasis * (184 - 122))
+        label.style.color = `rgba(${rr},${rg},${rb},1)`
+        label.style.opacity = String(0.5 + emphasis * 0.5)
+      })
+    },
+    [active],
+  )
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (prefersReducedMotion) return
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => updateProximity(e.clientY))
+    },
+    [prefersReducedMotion, updateProximity],
+  )
+
+  const handlePointerLeave = useCallback(() => {
+    resetProximity()
+  }, [resetProximity])
+
+  useEffect(() => {
+    resetProximity()
+  }, [active, resetProximity])
+
   return (
-    <nav className="fixed left-6 top-1/2 z-50 hidden -translate-y-1/2 md:block">
+    <nav
+      className="fixed left-6 top-1/2 z-50 hidden -translate-y-1/2 md:block"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+    >
       <div className="flex flex-col items-center gap-5">
         <button
           onClick={() => scrollTo("hero-section")}
@@ -141,23 +223,34 @@ function DesktopNav({ active, onNav }: { active: string; onNav: (id: string) => 
           IA
         </button>
         <div className="h-12 w-px bg-zinc-800" />
-        {sections.map((s) => (
+        {sections.map((s, i) => (
           <button
             key={s.id}
+            ref={(el) => {
+              itemRefs.current[i] = el
+            }}
             onClick={() => onNav(s.id)}
-            className="group flex cursor-pointer items-center gap-3 py-1.5"
+            className="flex cursor-pointer items-center gap-3 py-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+            aria-label={`Navigate to ${s.label}`}
           >
             <span
-              className="h-px transition-all duration-300 group-hover:w-6"
+              ref={(el) => {
+                lineRefs.current[i] = el
+              }}
+              className="h-px"
               style={{
                 background: active === s.id ? "rgba(59,130,246,0.6)" : "rgba(63,63,70,1)",
                 width: active === s.id ? "24px" : "12px",
               }}
             />
             <span
-              className="text-[10px] uppercase tracking-[0.15em] transition-all duration-300 group-hover:text-zinc-400"
+              ref={(el) => {
+                labelRefs.current[i] = el
+              }}
+              className="text-[10px] uppercase tracking-[0.15em]"
               style={{
-                color: active === s.id ? "rgba(148,163,184,1)" : "rgba(113,113,122,0.6)",
+                color: active === s.id ? "rgba(148,163,184,1)" : "rgba(113,113,122,1)",
+                opacity: active === s.id ? 1 : 0.5,
               }}
             >
               {s.label}
