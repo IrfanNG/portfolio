@@ -35,11 +35,24 @@ jobs:
             cd /opt/apps/portfolio
 
             git fetch origin
-
             git reset --hard origin/main
 
             docker compose up -d --build
 
             docker image prune -af
 
-            curl -f https://irfanariff.com
+            echo "Waiting for application to start..."
+
+            for i in {1..12}; do
+                if curl -fs http://localhost:3000 > /dev/null; then
+                    echo "Application is ready."
+                    exit 0
+                fi
+
+                echo "Waiting... ($i/12)"
+                sleep 5
+            done
+
+            echo "Application failed health check."
+
+            exit 1
