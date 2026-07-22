@@ -34,8 +34,12 @@ jobs:
           script: |
             cd /opt/apps/portfolio
 
-            git pull origin main
+            git fetch origin
+
+            git reset --hard origin/main
 
             docker compose up -d --build
 
             docker image prune -af
+
+            curl -f https://irfanariff.com
