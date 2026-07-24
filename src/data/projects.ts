@@ -29,7 +29,7 @@ export const projects: Project[] = [
     ],
     outcome:
       "Print shops using CetakNow have reduced order management time, eliminated lost orders from chat-based workflows, and gained clear visibility into their daily revenue and pickup traffic.",
-    liveUrl: "https://cetaknow-production.up.railway.app/",
+    liveUrl: "https://cetaknow.irfanariff.com/",
   },
   {
     title: "BMoris",
