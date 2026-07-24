@@ -5,15 +5,6 @@ import { useFrame } from "@react-three/fiber"
 import { ScreenQuad } from "@react-three/drei"
 import * as THREE from "three"
 
-const BALL_COUNT = 4
-
-function noise(x: number, y: number, z: number): number {
-  const a = Math.sin(x * 1.27 + y * 3.71 + z * 0.93) * 0.5
-  const b = Math.sin(x * 2.53 + y * 1.43 + z * 2.81) * 0.3
-  const c = Math.sin(x * 0.87 + y * 2.19 + z * 1.57) * 0.2
-  return a + b + c
-}
-
 const vertexShader = /* glsl */ `
 varying vec2 vUv;
 void main() {
@@ -23,144 +14,163 @@ void main() {
 `
 
 const fragmentShader = /* glsl */ `
+precision highp float;
+
 uniform float uTime;
 uniform vec2 uMouse;
 uniform vec2 uResolution;
-uniform vec3 uBallPos[4];
-uniform float uBallRadius[4];
 
 varying vec2 vUv;
 
-float field(vec3 p) {
-    float sum = 0.0;
-    for (int i = 0; i < 4; i++) {
-        vec3 d = p - uBallPos[i];
-        float r2 = uBallRadius[i] * uBallRadius[i];
-        sum += r2 / dot(d, d);
-    }
-    vec2 mouseWorld = uMouse * 3.0;
-    float mouseDist = length(p.xy - vec3(mouseWorld, 0.0).xy);
-    float ripple = sin(mouseDist * 10.0 - uTime * 6.0) * 0.05 * smoothstep(4.0, 0.0, mouseDist);
-    sum += ripple;
-    return sum;
+// --- Noise functions ---
+
+vec2 hash(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
 }
 
-vec3 calcNormal(vec3 p) {
-    float e = 0.01;
-    return normalize(vec3(
-        field(p + vec3(e, 0.0, 0.0)) - field(p - vec3(e, 0.0, 0.0)),
-        field(p + vec3(0.0, e, 0.0)) - field(p - vec3(0.0, e, 0.0)),
-        field(p + vec3(0.0, 0.0, e)) - field(p - vec3(0.0, 0.0, e))
-    ));
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+        mix(dot(hash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
+            dot(hash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
+        mix(dot(hash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
+            dot(hash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
+        u.y
+    );
 }
+
+float fbm(vec2 p) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+    for (int i = 0; i < 5; i++) {
+        value += amplitude * noise(p * frequency);
+        frequency *= 2.0;
+        amplitude *= 0.5;
+    }
+    return value;
+}
+
+// --- Domain-warped fBm ---
+
+float domainWarpedFbm(vec2 p) {
+    float t = uTime * 0.15;
+
+    vec2 q = vec2(
+        fbm(p + vec2(0.0, 0.0) + t * 0.3),
+        fbm(p + vec2(5.2, 1.3) + t * 0.2)
+    );
+
+    vec2 r = vec2(
+        fbm(p + 4.0 * q + vec2(1.7, 9.2) + t * 0.15),
+        fbm(p + 4.0 * q + vec2(8.3, 2.8) + t * 0.12)
+    );
+
+    return fbm(p + 3.5 * r);
+}
+
+// --- Surface normal from noise ---
+
+vec3 calcNormal(vec2 p) {
+    float e = 0.005;
+    float h0 = domainWarpedFbm(p);
+    float hx = domainWarpedFbm(p + vec2(e, 0.0));
+    float hy = domainWarpedFbm(p + vec2(0.0, e));
+    return normalize(vec3((hx - h0) / e, (hy - h0) / e, 1.0));
+}
+
+// --- Main ---
 
 void main() {
-    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+    vec2 p = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
 
-    vec3 ro = vec3(0.0, 0.0, 4.0);
-    vec3 rd = normalize(vec3(uv, -1.5));
+    // Mouse ripple: displace p based on mouse distance
+    vec2 mousePos = uMouse * vec2(uResolution.x / uResolution.y, 1.0) * 1.5;
+    float mouseDist = length(p - mousePos);
+    float ripple = sin(mouseDist * 12.0 - uTime * 8.0) * 0.03 * smoothstep(2.5, 0.0, mouseDist);
+    p += normalize(p - mousePos + 0.001) * ripple;
 
-    float t = 0.0;
-    float threshold = 1.0;
-    bool hit = false;
+    // Flowing chrome surface
+    float h = domainWarpedFbm(p);
 
-    for (int i = 0; i < 64; i++) {
-        vec3 p = ro + rd * t;
-        float d = field(p);
-        if (d > threshold) {
-            hit = true;
-            break;
-        }
-        t += 0.1;
-        if (t > 20.0) break;
-    }
-
-    if (!hit) {
-        float bg = 0.035 + 0.01 * (1.0 - uv.y);
-        gl_FragColor = vec4(vec3(bg), 1.0);
-        return;
-    }
-
-    vec3 p = ro + rd * t;
+    // Surface normal from noise
     vec3 normal = calcNormal(p);
-    vec3 viewDir = normalize(ro - p);
 
-    vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+    // View and light directions
+    vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
+    vec3 lightDir1 = normalize(vec3(1.0, 1.0, 2.0));
+    vec3 lightDir2 = normalize(vec3(-1.5, 0.5, 1.0));
 
-    float diff = max(dot(normal, lightDir), 0.0) * 0.1;
+    // --- Chrome shading ---
 
-    vec3 halfDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(normal, halfDir), 0.0), 128.0);
+    // Diffuse (very low — chrome is mostly reflective)
+    float diff = max(dot(normal, lightDir1), 0.0) * 0.05
+               + max(dot(normal, lightDir2), 0.0) * 0.03;
 
-    float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0);
+    // Specular (ultra-sharp highlights)
+    vec3 halfDir1 = normalize(lightDir1 + viewDir);
+    vec3 halfDir2 = normalize(lightDir2 + viewDir);
+    float spec1 = pow(max(dot(normal, halfDir1), 0.0), 256.0);
+    float spec2 = pow(max(dot(normal, halfDir2), 0.0), 200.0);
 
-    vec3 iridescent = 0.5 + 0.5 * cos(6.28318 * (fresnel * vec3(0.3, 0.6, 0.9) + vec3(0.0, 0.1, 0.2)));
+    // Fresnel (strong edge reflection)
+    float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 4.0);
 
-    vec3 baseColor = vec3(0.85, 0.88, 0.92);
+    // Iridescent tint (very subtle)
+    vec3 iridescent = 0.5 + 0.5 * cos(6.28318 * (fresnel * vec3(0.2, 0.5, 0.8) + vec3(0.0, 0.05, 0.1)));
 
-    vec3 color = baseColor * (0.1 + diff);
-    color += spec * vec3(1.0);
-    color += fresnel * iridescent * 0.4;
-
+    // Environment reflection (fake — silver/white, NOT blue)
     vec3 refl = reflect(-viewDir, normal);
-    float env = max(refl.y, 0.0) * 0.15;
-    color += env * vec3(0.6, 0.7, 0.8);
+    float env = smoothstep(-0.2, 0.8, refl.y);
+    vec3 envColor = mix(vec3(0.6, 0.62, 0.65), vec3(0.95, 0.96, 0.98), env);
+
+    // Base chrome color (warm silver)
+    vec3 baseColor = vec3(0.78, 0.80, 0.83);
+
+    // Combine
+    vec3 color = vec3(0.0);
+    color += baseColor * diff;
+    color += spec1 * vec3(1.0) * 1.2;
+    color += spec2 * vec3(0.95, 0.97, 1.0) * 0.6;
+    color += fresnel * envColor * 0.5;
+    color += fresnel * iridescent * 0.08;
+    color += baseColor * 0.08;
+
+    // Darken valleys, brighten peaks based on noise height
+    color *= 0.6 + h * 0.8;
+
+    // Vignette
+    vec2 uv = gl_FragCoord.xy / uResolution;
+    float vignette = 1.0 - 0.3 * length(uv - 0.5);
+    color *= vignette;
+
+    // Clamp
+    color = clamp(color, 0.0, 1.0);
 
     gl_FragColor = vec4(color, 1.0);
 }
 `
 
-function LiquidBlob() {
+function LiquidChrome() {
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uMouse: { value: new THREE.Vector2(0, 0) },
       uResolution: { value: new THREE.Vector2(1, 1) },
-      uBallPos: {
-        value: Array.from({ length: BALL_COUNT }, () => new THREE.Vector3(0, 0, 0)),
-      },
-      uBallRadius: { value: new Float32Array(BALL_COUNT).fill(0.5) },
     }),
     [],
   )
 
   const mouseRef = useRef(new THREE.Vector2(0, 0))
-  const timeRef = useRef(0)
 
   useFrame(({ pointer, size }, delta) => {
-    timeRef.current += delta
-    const t = timeRef.current
-
+    uniforms.uTime.value += delta
     mouseRef.current.lerp(new THREE.Vector2(pointer.x, pointer.y), 0.05)
-
-    uniforms.uResolution.value.set(size.width, size.height)
-
-    const positions = uniforms.uBallPos.value as THREE.Vector3[]
-    const radii = uniforms.uBallRadius.value as Float32Array
-
-    for (let i = 0; i < 3; i++) {
-      const speed = 0.3 + i * 0.15
-      const radius = 1.2 + i * 0.4
-      const offset = i * 2.094
-
-      const nx = noise(t * 0.2 + i, i, 0)
-      const ny = noise(0, t * 0.2 + i, i)
-
-      positions[i].set(
-        Math.cos(t * speed + offset) * radius + nx * 0.3,
-        Math.sin(t * speed * 0.7 + offset) * radius * 0.6 + ny * 0.3,
-        Math.sin(t * speed * 0.5 + offset) * 0.5,
-      )
-      radii[i] = 0.6 + Math.sin(t * 0.5 + i) * 0.1
-    }
-
-    const mx = mouseRef.current.x * 3
-    const my = mouseRef.current.y * 2
-    positions[3].set(mx, my, 0)
-    radii[3] = 0.5 + Math.sin(t * 2) * 0.05
-
-    uniforms.uTime.value = t
     uniforms.uMouse.value.copy(mouseRef.current)
+    uniforms.uResolution.value.set(size.width, size.height)
   })
 
   return (
@@ -175,10 +185,5 @@ function LiquidBlob() {
 }
 
 export function DeveloperDeskScene() {
-  return (
-    <>
-      <ambientLight intensity={0.1} />
-      <LiquidBlob />
-    </>
-  )
+  return <LiquidChrome />
 }
