@@ -33,17 +33,27 @@ export function HeroSection() {
         {prefersReducedMotion ? (
           "DEVELOPER"
         ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.55, y: -120, filter: "blur(14px)" }}
-            animate={
-              isInView
-                ? { opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }
-                : { opacity: 0, scale: 0.55, y: -120, filter: "blur(14px)" }
-            }
-            transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
-          >
-            DEVELOPER
-          </motion.div>
+          <div>
+            {"DEVELOPER".split("").map((char, i) => {
+              const center = Math.floor("DEVELOPER".length / 2)
+              const delay = Math.abs(i - center) * 0.08
+              return (
+                <motion.span
+                  key={i}
+                  className="inline-block"
+                  initial={{ opacity: 0, scale: 0.55, filter: "blur(14px)" }}
+                  animate={
+                    isInView
+                      ? { opacity: 1, scale: 1, filter: "blur(0px)" }
+                      : { opacity: 0, scale: 0.55, filter: "blur(14px)" }
+                  }
+                  transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {char}
+                </motion.span>
+              )
+            })}
+          </div>
         )}
       </div>
 
