@@ -99,3 +99,8 @@
     @apply bg-zinc-700 text-white;
   }
 }
+
+@keyframes webglFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

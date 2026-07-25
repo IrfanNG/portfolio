@@ -29,35 +29,7 @@ export function HeroSection() {
     >
       <WebGLHero />
 
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none whitespace-nowrap text-[clamp(120px,20vw,280px)] font-black text-white/10">
-        {prefersReducedMotion ? (
-          "DEVELOPER"
-        ) : (
-          <div>
-            {"DEVELOPER".split("").map((char, i) => {
-              const center = Math.floor("DEVELOPER".length / 2)
-              const delay = Math.abs(i - center) * 0.08
-              return (
-                <motion.span
-                  key={i}
-                  className="inline-block"
-                  initial={{ opacity: 0, scale: 0.55, filter: "blur(14px)" }}
-                  animate={
-                    isInView
-                      ? { opacity: 1, scale: 1, filter: "blur(0px)" }
-                      : { opacity: 0, scale: 0.55, filter: "blur(14px)" }
-                  }
-                  transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  {char}
-                </motion.span>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-6 md:px-8">
+<div className="pointer-events-none relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-6 md:px-8">
         <div className="flex flex-col items-center text-center">
           <motion.div
             initial={{ opacity: 0, y: 10 }}

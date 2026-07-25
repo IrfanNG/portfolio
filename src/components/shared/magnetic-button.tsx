@@ -57,7 +57,7 @@ export function MagneticButton({
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="inline-block"
+      className={cn("pointer-events-auto inline-block", className)}
       whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 300, damping: 15 }}
