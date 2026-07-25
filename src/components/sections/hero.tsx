@@ -3,7 +3,7 @@
 import { useRef } from "react"
 import { ArrowRight } from "lucide-react"
 import { motion, useInView } from "framer-motion"
-import { FaWhatsapp, FaEnvelope, FaTiktok, FaThreads, FaInstagram, FaGithub } from "react-icons/fa6"
+import { FaWhatsapp, FaEnvelope, FaTiktok, FaThreads, FaInstagram, FaGithub, FaLinkedin } from "react-icons/fa6"
 import { MagneticButton } from "@/components/shared/magnetic-button"
 import { AnimatedText } from "@/components/shared/animated-text"
 import { WebGLHero } from "@/components/webgl/webgl-hero"
@@ -13,10 +13,10 @@ import { profile } from "@/data/profile"
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   whatsapp: FaWhatsapp,
   email: FaEnvelope,
-  tiktok: FaTiktok,
-  threads: FaThreads,
   instagram: FaInstagram,
+  threads: FaThreads,
   github: FaGithub,
+  linkedin: FaLinkedin,
 }
 
 export function HeroSection() {
