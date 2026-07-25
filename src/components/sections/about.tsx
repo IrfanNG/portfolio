@@ -5,8 +5,6 @@ import { motion } from "framer-motion"
 import { SectionShell, SectionHeading, SectionWatermark } from "@/components/shared/section-shell"
 import { profile } from "@/data/profile"
 
-const techStack = ["Next.js", "React", "TypeScript", "Tailwind", "Node.js"]
-
 export function AboutSection() {
   return (
     <SectionShell id="about" className="relative">
@@ -34,20 +32,6 @@ export function AboutSection() {
 
         <FactsPanel />
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-        className="mt-10 flex flex-wrap gap-x-5 gap-y-2 border-t border-zinc-800/60 pt-6"
-      >
-        {techStack.map((tech) => (
-          <span key={tech} className="border border-zinc-800 bg-zinc-900/40 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
-            {tech}
-          </span>
-        ))}
-      </motion.div>
     </SectionShell>
   )
 }
