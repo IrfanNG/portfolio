@@ -86,15 +86,6 @@ export function HeroSection() {
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.25, ease: [0.25, 0.1, 0, 1] }}
-            className="mt-1 text-base text-zinc-400 md:text-lg"
-          >
-            {profile.role} &middot; {profile.location}
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.35, ease: [0.25, 0.1, 0, 1] }}
             className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-zinc-500 md:text-lg"
           >
