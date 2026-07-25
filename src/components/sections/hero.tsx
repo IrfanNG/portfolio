@@ -90,13 +90,13 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.45, ease: [0.25, 0.1, 0, 1] }}
-            className="mt-6 flex flex-row flex-wrap items-center justify-center gap-3"
+            className="mt-6 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3"
           >
-            <MagneticButton href="#about" size="lg">
+            <MagneticButton href="#about" size="md">
               About Me
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-4 w-4" />
             </MagneticButton>
-            <MagneticButton href="#work" variant="outline" size="lg">
+            <MagneticButton href="#work" variant="outline" size="md">
               View My Work
             </MagneticButton>
           </motion.div>
