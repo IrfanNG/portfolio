@@ -19,12 +19,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   github: FaGithub,
 }
 
-const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60183823063"
-const waMessage = encodeURIComponent(
-  "Hi Irfan, I'm interested in building a website/system. Can we discuss?",
-)
-const waUrl = waNumber ? `https://wa.me/${waNumber}?text=${waMessage}` : null
-
 export function HeroSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
   const { prefersReducedMotion } = useReducedMotion()
@@ -98,12 +92,10 @@ export function HeroSection() {
             transition={{ duration: 0.4, delay: 0.45, ease: [0.25, 0.1, 0, 1] }}
             className="mt-6 flex flex-col items-center gap-3 sm:flex-row"
           >
-            {waUrl && (
-              <MagneticButton href={waUrl} size="lg">
-                Start a Project
-                <ArrowRight className="h-5 w-5" />
-              </MagneticButton>
-            )}
+            <MagneticButton href="#about" size="lg">
+              About Me
+              <ArrowRight className="h-5 w-5" />
+            </MagneticButton>
             <MagneticButton href="#work" variant="outline" size="lg">
               View My Work
             </MagneticButton>
