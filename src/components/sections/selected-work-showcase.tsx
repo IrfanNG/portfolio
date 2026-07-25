@@ -208,20 +208,19 @@ function MobileCarousel({ prefersReducedMotion }: { prefersReducedMotion: boolea
     setActiveIndex((index + projects.length) % projects.length)
   }, [])
 
-  const next = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo])
-  const prev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo])
-
   useEffect(() => {
     if (prefersReducedMotion || isPaused) return
-    timerRef.current = setInterval(next, 5000)
+    timerRef.current = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % projects.length)
+    }, 5000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [prefersReducedMotion, isPaused, next])
+  }, [prefersReducedMotion, isPaused])
 
   const handleDragEnd = (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
     const swipe = info.offset.x
     const velocity = info.velocity.x
-    if (swipe < -50 || velocity < -500) next()
-    else if (swipe > 50 || velocity > 500) prev()
+    if (swipe < -50 || velocity < -500) setActiveIndex((prev) => (prev + 1) % projects.length)
+    else if (swipe > 50 || velocity > 500) setActiveIndex((prev) => (prev - 1 + projects.length) % projects.length)
   }
 
   return (
