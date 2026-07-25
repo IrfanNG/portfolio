@@ -24,10 +24,6 @@ export function AboutSection() {
             dashboards, and internal systems — combining clean engineering with thoughtful interface
             craft.
           </p>
-          <p className="mt-5 text-base leading-relaxed text-zinc-500">
-            My goal is simple: help businesses turn rough ideas into polished systems that are easy
-            to use, easy to scale, and ready to ship.
-          </p>
         </motion.div>
 
         <FactsPanel />
