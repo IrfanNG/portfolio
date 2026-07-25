@@ -198,94 +198,131 @@ function DesktopShowcase() {
   )
 }
 
-function MobileGallery({ prefersReducedMotion }: { prefersReducedMotion: boolean }) {
+function MobileCarousel({ prefersReducedMotion }: { prefersReducedMotion: boolean }) {
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
   const activeProject = projects[activeIndex]
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const goTo = useCallback((index: number) => {
+    setActiveIndex((index + projects.length) % projects.length)
+  }, [])
+
+  const next = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo])
+  const prev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo])
+
+  useEffect(() => {
+    if (prefersReducedMotion || isPaused) return
+    timerRef.current = setInterval(next, 5000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [prefersReducedMotion, isPaused, next])
+
+  const handleDragEnd = (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
+    const swipe = info.offset.x
+    const velocity = info.velocity.x
+    if (swipe < -50 || velocity < -500) next()
+    else if (swipe > 50 || velocity > 500) prev()
+  }
 
   return (
-    <div className="md:hidden border border-zinc-800 bg-zinc-900/40">
-      <div className="flex items-center gap-3 px-5 pt-5 pb-4">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400/80">
-          {String(activeIndex + 1).padStart(2, "0")}
-        </span>
-        <span className="h-px w-4 bg-zinc-700" />
-        <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-400">
-          Featured Work
-        </span>
-      </div>
+    <div
+      className="md:hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div className="relative overflow-hidden border border-zinc-800 bg-zinc-900/40">
+        <div className="flex items-center gap-3 px-5 pt-5 pb-4">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400/80">
+            {String(activeIndex + 1).padStart(2, "0")}
+          </span>
+          <span className="h-px w-4 bg-zinc-700" />
+          <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-400">
+            Featured Work
+          </span>
+        </div>
 
-      <div className="bg-zinc-950 px-6 pt-8 pb-6 sm:px-8">
-        <div className="relative mx-auto aspect-video w-full overflow-hidden">
+        <div className="relative touch-pan-y px-5 pb-6 sm:px-8">
           {prefersReducedMotion ? (
-            <Image
-              src={activeProject.image}
-              alt={`${activeProject.title} project showcase`}
-              fill
-              sizes="(max-width: 767px) calc(100vw - 48px), 260px"
-              className="object-contain p-2"
-              priority
-            />
+            <div className="relative mx-auto aspect-video w-full overflow-hidden">
+              <Image
+                src={activeProject.image}
+                alt={`${activeProject.title} project showcase`}
+                fill
+                sizes="(max-width: 767px) calc(100vw - 48px), 260px"
+                className="object-contain p-2"
+                priority
+              />
+            </div>
           ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeProject.slug}
-                className="absolute inset-0"
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.04 }}
-                transition={{ duration: 0.3, ease: [0.25, 0.1, 0, 1] }}
-              >
-                <Image
-                  src={activeProject.image}
-                  alt={`${activeProject.title} project showcase`}
-                  fill
-                  sizes="(max-width: 767px) calc(100vw - 48px), 260px"
-                  className="object-contain p-2"
-                  priority={activeIndex === 0}
-                />
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={handleDragEnd}
+              className="relative mx-auto aspect-video w-full cursor-grab active:cursor-grabbing"
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeProject.slug}
+                  className="absolute inset-0"
+                  initial={{ opacity: 0, x: 60 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -60 }}
+                  transition={{ duration: 0.35, ease: [0.25, 0.1, 0, 1] }}
+                >
+                  <Image
+                    src={activeProject.image}
+                    alt={`${activeProject.title} project showcase`}
+                    fill
+                    sizes="(max-width: 767px) calc(100vw - 48px), 260px"
+                    className="object-contain p-2"
+                    priority={activeIndex === 0}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
           )}
         </div>
-      </div>
 
-      <div className="flex items-center justify-center gap-3 px-5 py-5">
-        {projects.map((project, i) => (
-          <button
-            key={project.slug}
-            type="button"
-            onClick={() => setActiveIndex(i)}
-            className={cn(
-              "relative h-14 w-14 flex-shrink-0 overflow-hidden border-2 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
-              i === activeIndex
-                ? "border-blue-400/80 opacity-100"
-                : "border-zinc-800 opacity-40 hover:opacity-70",
-            )}
-            aria-label={`View ${project.title}`}
-            aria-pressed={i === activeIndex}
-          >
-            <Image
-              src={project.image}
-              alt=""
-              fill
-              sizes="56px"
-              className="object-contain p-1"
+        <div className="flex items-center justify-center gap-2 px-5 pb-5">
+          {projects.map((project, i) => (
+            <button
+              key={project.slug}
+              type="button"
+              onClick={() => goTo(i)}
+              className={cn(
+                "h-1.5 rounded-full transition-all duration-300",
+                i === activeIndex
+                  ? "w-6 bg-blue-400/80"
+                  : "w-1.5 bg-zinc-700 hover:bg-zinc-600",
+              )}
+              aria-label={`Go to ${project.title}`}
+              aria-pressed={i === activeIndex}
             />
-          </button>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className="border-t border-zinc-800 px-5 py-6">
-        <span className="mb-2 inline-block text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-500">
-          {activeProject.category}
-        </span>
-        <h3 className="text-2xl font-bold tracking-tight text-zinc-100">
-          {activeProject.title}
-        </h3>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-          {activeProject.description}
-        </p>
-        <ProjectMeta project={activeProject} />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeProject.slug}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0, 1] }}
+            className="border-t border-zinc-800 px-5 py-6"
+          >
+            <span className="mb-2 inline-block text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-500">
+              {activeProject.category}
+            </span>
+            <h3 className="text-2xl font-bold tracking-tight text-zinc-100">
+              {activeProject.title}
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+              {activeProject.description}
+            </p>
+            <ProjectMeta project={activeProject} />
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   )
@@ -297,7 +334,7 @@ export function SelectedWorkShowcase() {
   return (
     <>
       <DesktopShowcase />
-      <MobileGallery prefersReducedMotion={prefersReducedMotion} />
+      <MobileCarousel prefersReducedMotion={prefersReducedMotion} />
     </>
   )
 }
