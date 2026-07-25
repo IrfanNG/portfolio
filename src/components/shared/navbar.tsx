@@ -16,7 +16,7 @@ const waUrl = `https://wa.me/${waNumber}?text=${waMessage}`
 
 const sections = [
   { id: "work", label: "Work" },
-  { id: "services", label: "Services" },
+
 
   { id: "about", label: "About" },
   { id: "contact", label: "Contact" },
