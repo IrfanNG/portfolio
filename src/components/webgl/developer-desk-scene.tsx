@@ -87,8 +87,8 @@ void main() {
     vec3 lightDir1 = normalize(vec3(c * 1.0 + s * 2.0, -s * 1.0 + c * 2.0, 2.0));
     vec3 lightDir2 = normalize(vec3(-1.5, 0.5, 1.0 + sin(uTime * 0.3) * 0.5));
 
-    float diff = max(dot(normal, lightDir1), 0.0) * 0.05
-               + max(dot(normal, lightDir2), 0.0) * 0.03;
+    float diff = max(dot(normal, lightDir1), 0.0) * 0.1
+               + max(dot(normal, lightDir2), 0.0) * 0.06;
 
     vec3 halfDir1 = normalize(lightDir1 + viewDir);
     vec3 halfDir2 = normalize(lightDir2 + viewDir);
@@ -106,16 +106,16 @@ void main() {
 
     vec3 color = vec3(0.0);
     color += baseColor * diff;
-    color += spec1 * vec3(1.0) * 1.2;
-    color += spec2 * vec3(0.95, 0.97, 1.0) * 0.6;
-    color += fresnel * envColor * 0.5;
-    color += fresnel * iridescent * 0.08;
-    color += baseColor * 0.08;
+    color += spec1 * vec3(1.0) * 1.4;
+    color += spec2 * vec3(0.95, 0.97, 1.0) * 0.7;
+    color += fresnel * envColor * 0.6;
+    color += fresnel * iridescent * 0.11;
+    color += baseColor * 0.12;
 
-    color *= 0.6 + h * 0.8;
+    color *= 0.68 + h * 0.8;
 
     vec2 uv = gl_FragCoord.xy / uResolution;
-    float vignette = 1.0 - 0.3 * length(uv - 0.5);
+    float vignette = 1.0 - 0.12 * length(uv - 0.5);
     color *= vignette;
 
     color = clamp(color, 0.0, 1.0);
