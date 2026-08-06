@@ -26,6 +26,8 @@ function ProjectPanel({
   stacked?: boolean
   ref?: Ref<HTMLDivElement>
 }) {
+  const isMobile = project.previewType === "mobile"
+
   return (
     <div
       ref={ref}
@@ -37,33 +39,41 @@ function ProjectPanel({
         stacked ? "h-dvh w-full" : "h-dvh w-screen",
       )}
     >
-      <Image
-        src={project.image}
-        alt={`${project.title} project showcase`}
-        fill
-        sizes="100vw"
-        priority={index === 0}
-        className="object-cover"
-      />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 p-5 pb-6">
-        <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-300">
+      <div className="flex h-full flex-col justify-center gap-4 px-5">
+        <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-400">
           <span className="text-blue-400/90">{String(index + 1).padStart(2, "0")}</span>
-          <span className="h-px w-4 bg-zinc-500/70" />
+          <span className="h-px w-4 bg-zinc-700" />
           <span>{project.category}</span>
         </div>
-        <h3 className="mt-2 text-3xl font-bold tracking-tight text-white">{project.title}</h3>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+        <div className="border border-zinc-800 bg-zinc-950/70">
+          <div
+            className={cn(
+              "relative w-full overflow-hidden bg-zinc-950",
+              isMobile ? "aspect-[3/2]" : "aspect-video",
+            )}
+          >
+            <Image
+              src={project.image}
+              alt={`${project.title} project showcase`}
+              fill
+              sizes="(max-width: 767px) calc(100vw - 40px), 100vw"
+              priority={index === 0}
+              className="object-contain p-2"
+            />
+          </div>
+        </div>
+        <h3 className="text-2xl font-bold tracking-tight text-zinc-100">{project.title}</h3>
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
           {project.techStack.slice(0, 3).map((tech) => (
             <span
               key={tech}
-              className="font-mono text-[10px] uppercase tracking-wider text-zinc-300/80"
+              className="font-mono text-[10px] uppercase tracking-wider text-zinc-600"
             >
               {tech}
             </span>
           ))}
         </div>
-        <div className="mt-4 flex items-center gap-4 text-[10px] font-medium uppercase tracking-wider">
+        <div className="flex items-center gap-4 text-[10px] font-medium uppercase tracking-wider">
           <span
             className={cn(
               project.status === "live"
@@ -80,7 +90,7 @@ function ProjectPanel({
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-300 transition-colors hover:text-white"
+              className="text-zinc-400 transition-colors hover:text-zinc-200"
             >
               Open Live
             </a>
@@ -90,14 +100,14 @@ function ProjectPanel({
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-300 transition-colors hover:text-white"
+              className="text-zinc-400 transition-colors hover:text-zinc-200"
             >
               Source
             </a>
           )}
           <Link
             href={`/work/${project.slug}`}
-            className="inline-flex items-center gap-1 text-zinc-300 transition-colors hover:text-white"
+            className="inline-flex items-center gap-1 text-zinc-400 transition-colors hover:text-zinc-200"
           >
             Case study
             <ArrowUpRight className="h-3.5 w-3.5" />
