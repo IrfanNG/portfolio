@@ -2,18 +2,19 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the mobile Selected Work section clean and balanced by removing the blurred grey panel background, reducing heading-to-project spacing, and vertically centering each project while its horizontal-scroll panel is pinned.
+**Goal:** Make the mobile Selected Work section compact by removing the blurred grey panel background, reducing heading-to-project spacing, and eliminating the large blank space around each project.
 
-**Architecture:** Keep the existing GSAP horizontal-scroll interaction and desktop showcase unchanged. Motion-enabled mobile panels retain viewport height so the active project has a stable, centered composition while pinned; a grid content wrapper centers the complete project block vertically. The screenshot remains the visual focus without a blurred full-panel background. The reduced-motion fallback remains content-height, and the parent section uses tighter mobile-only spacing while retaining desktop spacing.
+**Architecture:** Keep the desktop showcase unchanged. Replace the mobile GSAP-pinned interaction with a native CSS horizontal scroll container using mandatory snap points; native scrolling does not reserve a vertical pin spacer. All project panels use natural content height, the screenshot remains the visual focus without a blurred full-panel background, and the parent section uses tighter mobile-only spacing.
 
-**Tech Stack:** Next.js 16 App Router, React 19, Tailwind CSS v4, GSAP ScrollTrigger, `next/image`.
+**Tech Stack:** Next.js 16 App Router, React 19, Tailwind CSS v4, `next/image`.
 
 ## Global Constraints
 
 - Do not add dependencies or alter project data.
 - Desktop (`md` / 768px and above) layout and behavior remain unchanged.
-- Preserve horizontal scrolling, snapping, accessibility roles, and reduced-motion vertical fallback.
-- Motion-enabled mobile panels use `h-dvh`; reduced-motion stacked panels must remain content-height.
+- Preserve native horizontal scrolling, CSS snapping, accessibility roles, and the reduced-motion vertical fallback.
+- Do not import GSAP or ScrollTrigger in the mobile scroll component.
+- All mobile panels must use natural content height; do not use `h-dvh` or `min-h-dvh` in the project-panel component.
 - Use only existing Tailwind utilities and existing project-component conventions.
 - This repository has no automated UI test runner; use lint, production build, and repeatable mobile browser checks.
 - Commit style: `fix(frontend): ...`.
@@ -22,20 +23,20 @@
 
 ## File Structure
 
-- Modify: `src/components/sections/mobile-horizontal-scroll.tsx` — mobile panel sizing and presentation only.
+- Modify: `src/components/sections/mobile-horizontal-scroll.tsx` — native horizontal swipe, panel sizing, and presentation.
 - Modify: `src/components/sections/selected-work.tsx` — Selected Work vertical spacing only.
 - Do not modify: `src/components/sections/selected-work-showcase.tsx` — it remains the desktop/mobile switch boundary.
 
 ---
 
-### Task 1: Remove the mobile panel backdrop and center the pinned content
+### Task 1: Replace pinned mobile scrolling with native horizontal swipe
 
 **Files:**
 - Modify: `src/components/sections/mobile-horizontal-scroll.tsx:16-136, 259`
 
 **Interfaces:**
-- Consumes: `projects`, `ProjectPanel` props, existing GSAP measurement based on each panel’s `offsetWidth`.
-- Produces: full-viewport motion panels with centered project content and content-height reduced-motion panels, retaining their full-width horizontal-scroll contract.
+- Consumes: `projects`, `ProjectPanel` props, native container `scrollLeft`, and the existing `PANEL_GAP` constant.
+- Produces: a content-height, touch-swipable horizontal scroller with CSS snapping and active-panel announcements.
 
 - [ ] **Step 1: Capture the current failing mobile reproduction**
 
@@ -47,45 +48,41 @@ npm run dev
 
 At a viewport width of 375px, navigate to `/#work` and record these current failures:
 - the blurred project image produces a grey/dark backdrop around the content;
-- during a pinned panel, the project block starts near the top of the viewport and leaves most of the visible space below it.
+- GSAP `pin: true` reserves an entire viewport while the project content occupies only its natural height.
 
 Expected: both failures are reproducible before the code change.
 
 - [ ] **Step 2: Make the smallest panel-layout change**
 
-In `ProjectPanel`, remove the decorative absolute `<Image>` with `scale-110 object-cover opacity-30 blur-2xl` and remove its `bg-zinc-950/60` overlay. Keep a viewport-height panel for the animated horizontal-scroll path, but keep the reduced-motion stack content-height.
+In `ProjectPanel`, remove the decorative absolute `<Image>` with `scale-110 object-cover opacity-30 blur-2xl` and remove its `bg-zinc-950/60` overlay. Use the same natural content-height structure for the native-scroll and reduced-motion paths.
 
 Use this shape:
 
 ```tsx
 className={cn(
-  "relative flex-none overflow-hidden",
-  stacked ? "w-full py-6" : "h-dvh w-screen",
+  "relative flex-none overflow-hidden py-6",
+  stacked ? "w-full" : "w-screen",
 )}
 ```
 
-Use a grid wrapper with an explicit viewport minimum height for the animated path. This avoids relying on percentage height and centers the entire category/screenshot/meta block during pinning:
+Use a natural-flow content wrapper; do not add a height or minimum height:
 
 ```tsx
-<div
-  className={cn(
-    "relative grid gap-3 px-5",
-    stacked ? "py-6" : "min-h-dvh content-center",
-  )}
->
+<div className="relative flex flex-col gap-3 px-5">
 ```
 
 Keep the foreground screenshot, title, description, technologies, status, and links unchanged.
+
+Remove GSAP/ScrollTrigger imports, the tween, and its pinning effect. Add a passive native `scroll` listener to calculate the closest panel index from `scrollLeft`, the first panel’s `offsetWidth`, and `PANEL_GAP`. Apply `snap-x snap-mandatory overflow-x-auto overscroll-x-contain` to the scroll container and `snap-start` to each non-stacked panel.
 
 - [ ] **Step 3: Verify the focused regression is gone**
 
 With the same 375px viewport:
 - no blurred/grey full-panel backdrop is visible;
-- each animated panel’s complete content block is vertically centered in the viewport;
-- the first and last reduced-motion panels end after their actions plus `py-6` padding;
-- horizontal scroll still reaches every project and snaps to each panel.
+- each panel ends immediately after its actions plus the `py-6` padding;
+- horizontal swipe still reaches every project and snaps to each panel.
 
-Expected: during motion-enabled horizontal scrolling, the space above and below the active project is visually balanced rather than concentrated below it.
+Expected: native scrolling creates no pinned viewport or blank region before About.
 
 - [ ] **Step 4: Commit the isolated panel fix**
 
@@ -180,7 +177,7 @@ Expected: no matches. This confirms the three classes responsible for the grey b
 At 375px, scroll from the Selected Work heading through all projects into About. Confirm:
 - screenshots appear without a surrounding grey panel;
 - header-to-content space is reduced;
-- the active project’s content is vertically centered while pinned;
+- the active project uses only its content height with no GSAP pin;
 - no grey blurred backdrop appears;
 - desktop behavior at 768px remains unchanged.
 
