@@ -2,6 +2,36 @@ import { Project } from "@/types"
 
 export const projects: Project[] = [
   {
+    title: "UTP MedTech",
+    slug: "utp-medtech",
+    category: "Multimedia Production Studio",
+    description:
+      "Corporate website for UTP MedTech Crew — a multimedia production studio covering photography, videography, live streaming, and end-to-end event solutions for leading organizations.",
+    techStack: ["React", "TypeScript", "Vite", "Supabase", "Framer Motion"],
+    image: "/projects/medtech-showcase.png",
+    previewType: "web",
+    status: "live",
+    role: "Frontend Developer",
+    year: "2026",
+    overview:
+      "UTP MedTech Crew is a multimedia production studio crafting photography, videography, live streaming and end-to-end event solutions for leading organizations across Malaysia and beyond.",
+    problem:
+      "The club needed a modern digital presence that matched the quality of their production work. Their existing site didn't reflect the scale of their operations — covering 500+ events for clients like PETRONAS, UTP, TM, and MDEC.",
+    solution:
+      "I built a cinematic, high-impact corporate website with React, TypeScript, and Vite. The site features a bold hero section, services showcase, featured projects carousel, client testimonials, and a full portfolio — designed to feel as polished as the media they produce.",
+    features: [
+      "Cinematic hero section with full production branding",
+      "Services showcase (photography, videography, technical, design, website)",
+      "Featured projects carousel with filterable portfolio",
+      "Client testimonials and trust badges",
+      "Contact and quote request flow",
+      "Supabase-powered content management",
+    ],
+    outcome:
+      "The new website gives UTP MedTech a professional online presence that matches their reputation — presenting their services, portfolio, and client base in a way that builds trust with leading organizations.",
+    liveUrl: "https://utp-medtech.irfanariff.com/",
+  },
+  {
     title: "CetakNow",
     slug: "cetaknow",
     category: "Print Ordering Platform",
