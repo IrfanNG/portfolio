@@ -35,17 +35,17 @@ function ProjectPanel({
       aria-roledescription="slide"
       aria-label={`Panel ${index + 1} of ${projects.length}`}
       className={cn(
-        "relative flex-none overflow-hidden",
-        stacked ? "h-dvh w-full" : "h-dvh w-screen",
+        "relative flex-none overflow-hidden py-6",
+        stacked ? "w-full" : "w-screen",
       )}
     >
-      <div className="flex h-full flex-col justify-center gap-4 px-5">
+      <div className="relative flex flex-col gap-3 px-5">
         <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-400">
           <span className="text-blue-400/90">{String(index + 1).padStart(2, "0")}</span>
           <span className="h-px w-4 bg-zinc-700" />
           <span>{project.category}</span>
         </div>
-        <div className="border border-zinc-800 bg-zinc-950/70">
+        <div className="border-y border-zinc-800 bg-zinc-950/70">
           <div
             className={cn(
               "relative w-full overflow-hidden bg-zinc-950",
@@ -56,13 +56,18 @@ function ProjectPanel({
               src={project.image}
               alt={`${project.title} project showcase`}
               fill
-              sizes="(max-width: 767px) calc(100vw - 40px), 100vw"
+              sizes="100vw"
               priority={index === 0}
-              className="object-contain p-2"
+              className="object-contain"
             />
           </div>
         </div>
-        <h3 className="text-2xl font-bold tracking-tight text-zinc-100">{project.title}</h3>
+        <div className="flex flex-col gap-2">
+          <h3 className="text-2xl font-bold tracking-tight text-zinc-100">{project.title}</h3>
+          <p className="line-clamp-2 text-sm leading-relaxed text-zinc-500">
+            {project.description}
+          </p>
+        </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           {project.techStack.slice(0, 3).map((tech) => (
             <span
@@ -241,7 +246,7 @@ export function MobileHorizontalScroll() {
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         Panel {activeIndex + 1} of {projects.length}
       </div>
-      <div ref={rowRef} className="flex h-dvh flex-row flex-nowrap gap-4">
+      <div ref={rowRef} className="flex flex-row flex-nowrap gap-4">
         {projects.map((project, i) => (
           <ProjectPanel
             key={project.slug}
