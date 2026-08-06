@@ -35,11 +35,16 @@ function ProjectPanel({
       aria-roledescription="slide"
       aria-label={`Panel ${index + 1} of ${projects.length}`}
       className={cn(
-        "relative flex-none overflow-hidden py-6",
-        stacked ? "w-full" : "w-screen",
+        "relative flex-none overflow-hidden",
+        stacked ? "w-full py-6" : "h-dvh w-screen",
       )}
     >
-      <div className="relative flex flex-col gap-3 px-5">
+      <div
+        className={cn(
+          "relative grid gap-3 px-5",
+          stacked ? "py-6" : "min-h-dvh content-center",
+        )}
+      >
         <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-400">
           <span className="text-blue-400/90">{String(index + 1).padStart(2, "0")}</span>
           <span className="h-px w-4 bg-zinc-700" />
