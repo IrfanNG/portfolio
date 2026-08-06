@@ -5,9 +5,13 @@ import { SelectedWorkShowcase } from "./selected-work-showcase"
 
 export function SelectedWorkSection() {
   return (
-    <SectionShell id="work">
+    <SectionShell id="work" className="py-8 md:py-28">
       <SectionWatermark>WORK</SectionWatermark>
-      <SectionHeading label="Selected Work" title="Projects I've Built" />
+      <SectionHeading
+        label="Selected Work"
+        title="Projects I've Built"
+        className="mb-3 md:mb-16"
+      />
       <SelectedWorkShowcase />
     </SectionShell>
   )
