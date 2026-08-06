@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the mobile Selected Work section compact by removing the blurred grey panel background, reducing heading-to-project spacing, and eliminating the full-viewport blank space after each project.
+**Goal:** Make the mobile Selected Work section clean and balanced by removing the blurred grey panel background, reducing heading-to-project spacing, and vertically centering each project while its horizontal-scroll panel is pinned.
 
-**Architecture:** Keep the existing GSAP horizontal-scroll interaction and desktop showcase unchanged. On mobile, each project panel will become content-height rather than `100dvh`; the screenshot remains the visual focus but without a blurred full-panel background. The parent section will use tighter mobile-only spacing while retaining its desktop spacing.
+**Architecture:** Keep the existing GSAP horizontal-scroll interaction and desktop showcase unchanged. Motion-enabled mobile panels retain viewport height so the active project has a stable, centered composition while pinned; a grid content wrapper centers the complete project block vertically. The screenshot remains the visual focus without a blurred full-panel background. The reduced-motion fallback remains content-height, and the parent section uses tighter mobile-only spacing while retaining desktop spacing.
 
 **Tech Stack:** Next.js 16 App Router, React 19, Tailwind CSS v4, GSAP ScrollTrigger, `next/image`.
 
@@ -13,7 +13,7 @@
 - Do not add dependencies or alter project data.
 - Desktop (`md` / 768px and above) layout and behavior remain unchanged.
 - Preserve horizontal scrolling, snapping, accessibility roles, and reduced-motion vertical fallback.
-- Do not reintroduce a full-viewport (`h-dvh`) project-panel height on mobile.
+- Motion-enabled mobile panels use `h-dvh`; reduced-motion stacked panels must remain content-height.
 - Use only existing Tailwind utilities and existing project-component conventions.
 - This repository has no automated UI test runner; use lint, production build, and repeatable mobile browser checks.
 - Commit style: `fix(frontend): ...`.
@@ -28,14 +28,14 @@
 
 ---
 
-### Task 1: Remove the mobile panel backdrop and viewport-height constraint
+### Task 1: Remove the mobile panel backdrop and center the pinned content
 
 **Files:**
 - Modify: `src/components/sections/mobile-horizontal-scroll.tsx:16-136, 259`
 
 **Interfaces:**
 - Consumes: `projects`, `ProjectPanel` props, existing GSAP measurement based on each panel’s `offsetWidth`.
-- Produces: content-height project panels that retain their full-width horizontal-scroll contract.
+- Produces: full-viewport motion panels with centered project content and content-height reduced-motion panels, retaining their full-width horizontal-scroll contract.
 
 - [ ] **Step 1: Capture the current failing mobile reproduction**
 
@@ -46,29 +46,33 @@ npm run dev
 ```
 
 At a viewport width of 375px, navigate to `/#work` and record these current failures:
-- each panel fills roughly one viewport height;
 - the blurred project image produces a grey/dark backdrop around the content;
-- scrolling past the final project leaves a large blank panel before About.
+- during a pinned panel, the project block starts near the top of the viewport and leaves most of the visible space below it.
 
-Expected: all three are reproducible before the code change.
+Expected: both failures are reproducible before the code change.
 
 - [ ] **Step 2: Make the smallest panel-layout change**
 
-In `ProjectPanel`, remove the decorative absolute `<Image>` with `scale-110 object-cover opacity-30 blur-2xl` and remove its `bg-zinc-950/60` overlay. Change the outer panel classes from viewport-height sizing to `w-screen` plus vertical padding, preserving `relative flex-none overflow-hidden`.
+In `ProjectPanel`, remove the decorative absolute `<Image>` with `scale-110 object-cover opacity-30 blur-2xl` and remove its `bg-zinc-950/60` overlay. Keep a viewport-height panel for the animated horizontal-scroll path, but keep the reduced-motion stack content-height.
 
 Use this shape:
 
 ```tsx
 className={cn(
-  "relative flex-none overflow-hidden py-6",
-  stacked ? "w-full" : "w-screen",
+  "relative flex-none overflow-hidden",
+  stacked ? "w-full py-6" : "h-dvh w-screen",
 )}
 ```
 
-Change the content wrapper from `h-full justify-center` to a natural-flow stack:
+Use a grid wrapper with an explicit viewport minimum height for the animated path. This avoids relying on percentage height and centers the entire category/screenshot/meta block during pinning:
 
 ```tsx
-<div className="relative flex flex-col gap-3 px-5">
+<div
+  className={cn(
+    "relative grid gap-3 px-5",
+    stacked ? "py-6" : "min-h-dvh content-center",
+  )}
+>
 ```
 
 Keep the foreground screenshot, title, description, technologies, status, and links unchanged.
@@ -77,11 +81,11 @@ Keep the foreground screenshot, title, description, technologies, status, and li
 
 With the same 375px viewport:
 - no blurred/grey full-panel backdrop is visible;
-- the first panel ends immediately after its actions plus the `py-6` padding;
-- the last panel ends immediately after its actions plus the `py-6` padding;
+- each animated panel’s complete content block is vertically centered in the viewport;
+- the first and last reduced-motion panels end after their actions plus `py-6` padding;
 - horizontal scroll still reaches every project and snaps to each panel.
 
-Expected: no viewport-sized empty region appears after MyUmrahGuide.
+Expected: during motion-enabled horizontal scrolling, the space above and below the active project is visually balanced rather than concentrated below it.
 
 - [ ] **Step 4: Commit the isolated panel fix**
 
@@ -176,8 +180,8 @@ Expected: no matches. This confirms the three classes responsible for the grey b
 At 375px, scroll from the Selected Work heading through all projects into About. Confirm:
 - screenshots appear without a surrounding grey panel;
 - header-to-content space is reduced;
-- each project’s content defines its own height;
-- there is no large empty block before About;
+- the active project’s content is vertically centered while pinned;
+- no grey blurred backdrop appears;
 - desktop behavior at 768px remains unchanged.
 
 - [ ] **Step 4: Inspect and commit the final verified state**
@@ -188,4 +192,3 @@ git log --oneline -2
 ```
 
 Expected: only the two intended commits are present, with no untracked build artifacts.
-
