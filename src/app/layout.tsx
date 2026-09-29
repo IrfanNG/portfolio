@@ -56,6 +56,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen bg-zinc-950 font-sans text-zinc-100 antialiased">
+        <noscript>
+          <style>{`
+            #portfolio-intro { display: none !important; }
+            body:has(#portfolio-intro) { overflow: auto !important; overscroll-behavior: auto !important; }
+            html:has(#portfolio-intro) [data-intro-nav] { visibility: visible !important; }
+            html:has(#portfolio-intro) [data-hero-ambient] { opacity: 1 !important; }
+          `}</style>
+        </noscript>
         <Providers>
           <Navbar />
           <main>{children}</main>

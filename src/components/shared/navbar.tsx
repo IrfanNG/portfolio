@@ -104,6 +104,7 @@ export function Navbar() {
     <>
       <DesktopNav active={active} onNav={handleNav} />
       <button
+        data-intro-nav
         onClick={toggleMobile}
         className="fixed right-4 top-4 z-50 flex h-11 w-11 items-center justify-center border border-zinc-800 bg-zinc-950 md:hidden"
         aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -211,6 +212,7 @@ function DesktopNav({ active, onNav }: { active: string; onNav: (id: string) => 
 
   return (
     <nav
+      data-intro-nav
       className="fixed left-6 top-1/2 z-50 hidden -translate-y-1/2 md:block"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}

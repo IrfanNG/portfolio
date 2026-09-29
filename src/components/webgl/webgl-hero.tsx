@@ -19,7 +19,7 @@ export function WebGLHero() {
   }
 
   return (
-    <div className="absolute inset-0" style={{ animation: "webglFadeIn 1.5s ease-out forwards", opacity: 0 }}>
+    <div className="absolute inset-0" data-hero-ambient>
       <Canvas
         camera={{ position: [0, 0, 6], fov: 60 }}
         dpr={[1, 1]}

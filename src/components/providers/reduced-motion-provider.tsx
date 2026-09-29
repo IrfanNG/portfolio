@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useSyncExternalStore } from "react"
 
 type ReducedMotionContextType = {
   prefersReducedMotion: boolean
@@ -14,20 +14,22 @@ export function useReducedMotion() {
   return useContext(ReducedMotionContext)
 }
 
-function getInitialMotionPreference(): boolean {
-  if (typeof window === "undefined") return false
+function subscribeToMotionPreference(onChange: () => void) {
+  const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
+  mediaQuery.addEventListener("change", onChange)
+  return () => mediaQuery.removeEventListener("change", onChange)
+}
+
+function getMotionPreference() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches
 }
 
 export function ReducedMotionProvider({ children }: { children: React.ReactNode }) {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(getInitialMotionPreference)
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
-    mq.addEventListener("change", handler)
-    return () => mq.removeEventListener("change", handler)
-  }, [])
+  const prefersReducedMotion = useSyncExternalStore(
+    subscribeToMotionPreference,
+    getMotionPreference,
+    () => false,
+  )
 
   return (
     <ReducedMotionContext.Provider value={{ prefersReducedMotion }}>

@@ -1,13 +1,9 @@
 "use client"
 
-import { useRef } from "react"
 import { ArrowRight } from "lucide-react"
-import { motion, useInView } from "framer-motion"
-import { FaWhatsapp, FaEnvelope, FaTiktok, FaThreads, FaInstagram, FaGithub, FaLinkedin } from "react-icons/fa6"
+import { FaWhatsapp, FaEnvelope, FaThreads, FaInstagram, FaGithub, FaLinkedin } from "react-icons/fa6"
 import { MagneticButton } from "@/components/shared/magnetic-button"
-import { AnimatedText } from "@/components/shared/animated-text"
 import { WebGLHero } from "@/components/webgl/webgl-hero"
-import { useReducedMotion } from "@/components/providers/reduced-motion-provider"
 import { profile } from "@/data/profile"
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -20,43 +16,39 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 }
 
 export function HeroSection() {
-  const sectionRef = useRef<HTMLDivElement>(null)
-  const { prefersReducedMotion } = useReducedMotion()
-
-  const isInView = useInView(sectionRef, { amount: 0.45 })
-
   return (
     <section
-      ref={sectionRef}
       id="hero-section"
+      data-intro-hero
       className="relative min-h-screen overflow-hidden"
     >
       <WebGLHero />
 
       <div className="pointer-events-none relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-6 md:px-8">
         <div className="flex flex-col items-center text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.1, 0, 1] }}
+          <div
+            data-hero-eyebrow
             className="mb-4 text-xs text-zinc-500"
           >
             Available for freelance projects
-          </motion.div>
+          </div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.1, 0, 1] }}
+          <h1
+            data-hero-heading
+            aria-label={profile.name}
             className="text-6xl font-bold tracking-tight md:text-8xl lg:text-9xl"
           >
-            <AnimatedText text={profile.name} />
-          </motion.h1>
+            {profile.name.split(" ").map((word, index, words) => (
+              <span key={`${word}-${index}`} className="inline-block overflow-hidden align-bottom">
+                <span data-hero-word className="inline-block">
+                  {word}{index < words.length - 1 ? "\u00a0" : ""}
+                </span>
+              </span>
+            ))}
+          </h1>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2, ease: [0.25, 0.1, 0, 1] }}
+          <div
+            data-hero-supporting
             className="mt-4 flex items-center gap-4"
           >
             {profile.socialLinks.map((link) => {
@@ -75,21 +67,17 @@ export function HeroSection() {
                 </a>
               )
             })}
-          </motion.div>
+          </div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.35, ease: [0.25, 0.1, 0, 1] }}
+          <p
+            data-hero-supporting
             className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-zinc-500 md:text-lg"
           >
             {profile.tagline}
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.45, ease: [0.25, 0.1, 0, 1] }}
+          <div
+            data-hero-supporting
             className="mt-6 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3"
           >
             <MagneticButton href="#about" size="md">
@@ -99,7 +87,7 @@ export function HeroSection() {
             <MagneticButton href="#work" variant="outline" size="md">
               View My Work
             </MagneticButton>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
