@@ -43,19 +43,22 @@ export function SectionHeading({
   label,
   title,
   className,
+  animated = true,
 }: {
   label?: string
   title: string
   className?: string
+  animated?: boolean
 }) {
   const { prefersReducedMotion } = useReducedMotion()
+  const staticHeading = prefersReducedMotion || !animated
 
   return (
     <div className={cn("mb-12 md:mb-16", className)}>
       {label && (
         <motion.span
-          initial={prefersReducedMotion ? {} : { opacity: 0, y: 8 }}
-          whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+          initial={staticHeading ? false : { opacity: 0, y: 8 }}
+          whileInView={staticHeading ? {} : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: [0.25, 0.1, 0, 1] }}
           className="mb-2 inline-block text-xs font-medium uppercase tracking-widest text-zinc-500"
@@ -64,8 +67,8 @@ export function SectionHeading({
         </motion.span>
       )}
       <motion.h2
-        initial={prefersReducedMotion ? {} : { opacity: 0, y: 16 }}
-        whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        initial={staticHeading ? false : { opacity: 0, y: 16 }}
+        whileInView={staticHeading ? {} : { opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.1, 0, 1] }}
         className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl"

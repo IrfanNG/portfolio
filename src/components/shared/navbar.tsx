@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { MagneticButton } from "@/components/shared/magnetic-button"
 import { useReducedMotion } from "@/components/providers/reduced-motion-provider"
+import { useSmoothScroll } from "@/components/providers/smooth-scroll-provider"
 
 const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "60183823063"
 const waMessage = encodeURIComponent(
@@ -21,11 +22,6 @@ const sections = [
   { id: "about", label: "About" },
   { id: "contact", label: "Contact" },
 ] as const
-
-function scrollTo(id: string) {
-  const el = document.getElementById(id)
-  if (el) el.scrollIntoView({ behavior: "smooth" })
-}
 
 function useActiveSection() {
   const [active, setActive] = useState("")
@@ -70,6 +66,7 @@ function useActiveSection() {
 }
 
 export function Navbar() {
+  const { scrollTo, pause, resume } = useSmoothScroll()
   const pathname = usePathname()
   const [active, setActive] = useActiveSection()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -79,7 +76,7 @@ export function Navbar() {
       setActive(id)
       scrollTo(id)
     },
-    [setActive],
+    [setActive, scrollTo],
   )
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
@@ -87,6 +84,8 @@ export function Navbar() {
 
   useEffect(() => {
     if (!mobileOpen) return
+
+    pause("menu")
     document.body.style.overflow = "hidden"
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeMobile()
@@ -94,9 +93,10 @@ export function Navbar() {
     window.addEventListener("keydown", handler)
     return () => {
       document.body.style.overflow = ""
+      resume("menu")
       window.removeEventListener("keydown", handler)
     }
-  }, [mobileOpen, closeMobile])
+  }, [mobileOpen, closeMobile, pause, resume])
 
   if (pathname.startsWith("/work/")) return null
 
@@ -133,6 +133,7 @@ export function Navbar() {
 }
 
 function DesktopNav({ active, onNav }: { active: string; onNav: (id: string) => void }) {
+  const { scrollTo } = useSmoothScroll()
   const { prefersReducedMotion } = useReducedMotion()
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const lineRefs = useRef<(HTMLSpanElement | null)[]>([])

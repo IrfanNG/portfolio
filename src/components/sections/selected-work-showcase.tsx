@@ -1,210 +1,115 @@
 "use client"
 
-import { useState, useCallback, useRef, useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { motion, useInView, AnimatePresence } from "framer-motion"
-import { ArrowUpRight } from "lucide-react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { useReducedMotion } from "@/components/providers/reduced-motion-provider"
+import { useSmoothScroll } from "@/components/providers/smooth-scroll-provider"
 import { projects } from "@/data/projects"
-import { cn } from "@/lib/utils"
-import { MobileHorizontalScroll } from "./mobile-horizontal-scroll"
+import { getProjectFocusProgress, getShowcaseEntryClip, getShowcaseFrame } from "@/lib/project-showcase"
 import type { Project } from "@/types"
 
-function ShowcasePanel({
-  project,
-  index,
-  isActive,
-  onActivate,
-}: {
-  project: Project
-  index: number
-  isActive: boolean
-  onActivate: (index: number) => void
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, {
-    margin: "-35% 0px -35% 0px",
-    amount: "some",
-  })
+gsap.registerPlugin(ScrollTrigger)
 
-  useEffect(() => {
-    if (isInView) onActivate(index)
-  }, [isInView, index, onActivate])
-
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        "flex min-h-[60vh] flex-col justify-center transition-opacity duration-500",
-        isActive ? "opacity-100" : "opacity-30",
-      )}
-    >
-      <span className="mb-3 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
-        {String(index + 1).padStart(2, "0")}
-      </span>
-      <h3 className="text-3xl font-bold tracking-tight text-zinc-100 md:text-4xl lg:text-5xl">
-        {project.title}
-      </h3>
-      <span className="mt-2 text-xs font-medium uppercase tracking-[0.15em] text-zinc-500">
-        {project.category}
-      </span>
-      <p className="mt-4 max-w-md text-base leading-relaxed text-zinc-500">
-        {project.description}
-      </p>
+function ProjectImage({ project, index }: { project: Project; index: number }) {
+  const [failed, setFailed] = useState(false)
+  return failed ? (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-zinc-950 text-zinc-100">
+      <span>{project.title}</span>
+      <span className="text-sm text-zinc-400">Preview unavailable. Open case study.</span>
     </div>
-  )
-}
-
-function PreviewFrame({
-  project,
-  priority = false,
-}: {
-  project: Project
-  priority?: boolean
-}) {
-  const isMobile = project.previewType === "mobile"
-
-  return (
-    <div className="border border-zinc-800 bg-zinc-950/70">
-      <div className="flex items-center gap-1.5 border-b border-zinc-800/60 px-3 py-2.5">
-        <span className="h-2 w-2 bg-red-500/50" />
-        <span className="h-2 w-2 bg-yellow-500/50" />
-        <span className="h-2 w-2 bg-green-500/50" />
-        <span className="ml-2 text-[9px] font-mono uppercase tracking-wider text-zinc-600">
-          {isMobile ? "mobile showcase" : "web preview"}
-        </span>
-      </div>
-      <div
-        className={cn(
-          "relative overflow-hidden bg-zinc-950",
-          isMobile ? "aspect-[16/10]" : "aspect-[16/9]",
-        )}
-      >
-        <Image
-          src={project.image}
-          alt={`${project.title} project showcase`}
-          fill
-          sizes="(min-width: 768px) 50vw, 100vw"
-          className={cn("object-contain", isMobile ? "p-3 md:p-5" : "p-0")}
-          priority={priority}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/[0.03]" />
-      </div>
-    </div>
-  )
-}
-
-function ProjectMeta({ project }: { project: Project }) {
-  return (
-    <div className="mt-6 space-y-4">
-      <div className="flex items-center gap-5 text-[10px] uppercase tracking-wider">
-        <span
-          className={cn(
-            project.status === "live"
-              ? "text-emerald-400/80"
-              : project.status === "development"
-                ? "text-amber-400/80"
-                : "text-zinc-500",
-          )}
-        >
-          {project.status}
-        </span>
-        {(project.liveUrl || project.githubUrl) && (
-          <span className="text-zinc-700">/</span>
-        )}
-        {project.liveUrl && (
-          <a
-            href={project.liveUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-zinc-400 transition-colors hover:text-blue-400"
-          >
-            Open Live
-          </a>
-        )}
-        {project.githubUrl && (
-          <a
-            href={project.githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-zinc-400 transition-colors hover:text-zinc-300"
-          >
-            Source
-          </a>
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        {project.techStack.map((tech) => (
-          <span
-            key={tech}
-            className="text-[10px] font-mono uppercase tracking-wider text-zinc-600"
-          >
-            {tech}
-          </span>
-        ))}
-      </div>
-
-      <Link
-        href={`/work/${project.slug}`}
-        className="inline-flex items-center gap-1.5 text-sm text-zinc-600 transition-all duration-300 hover:text-zinc-400"
-      >
-        <span>View case study</span>
-        <ArrowUpRight className="h-4 w-4" />
-      </Link>
-    </div>
-  )
-}
-
-function DesktopShowcase() {
-  const [activeIndex, setActiveIndex] = useState(0)
-  const activeProject = projects[activeIndex]
-
-  const handleActivate = useCallback((index: number) => {
-    setActiveIndex(index)
-  }, [])
-
-  return (
-    <div className="hidden md:flex">
-      <div className="w-1/2 pr-12">
-        {projects.map((project, index) => (
-          <ShowcasePanel
-            key={project.slug}
-            project={project}
-            index={index}
-            isActive={index === activeIndex}
-            onActivate={handleActivate}
-          />
-        ))}
-      </div>
-
-      <div className="w-1/2">
-        <div className="sticky top-28">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeProject.slug}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.02 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.1, 0, 1] }}
-            >
-              <PreviewFrame project={activeProject} />
-              <ProjectMeta project={activeProject} />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-    </div>
+  ) : (
+    <Image src={project.image} alt={`${project.title}: view case study`} fill sizes="100vw"
+      loading="eager" fetchPriority={index === 0 ? "high" : "auto"}
+      className="project-showcase__image" onError={() => setFailed(true)} />
   )
 }
 
 export function SelectedWorkShowcase() {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<ScrollTrigger | null>(null)
+  const { prefersReducedMotion } = useReducedMotion()
+  const { ready, scrollTo } = useSmoothScroll()
+
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root || !ready || prefersReducedMotion || projects.length < 2) return
+    const layers = Array.from(root.querySelectorAll<HTMLAnchorElement>("[data-project-layer]"))
+    const section = root.closest<HTMLElement>("#work")
+    root.dataset.enhanced = "true"
+    const media = gsap.matchMedia()
+    media.add({ desktop: "(min-width: 768px) and (pointer: fine)", mobile: "(max-width: 767px), (pointer: coarse)" }, (context) => {
+      const desktop = Boolean(context.conditions?.desktop)
+      const render = (progress: number) => {
+        const frame = getShowcaseFrame(progress, layers.length)
+        root.dataset.activeProject = String(frame.activeIndex)
+        layers.forEach((layer, index) => {
+          layer.style.clipPath = `inset(${(1 - frame.reveals[index]) * 100}% 0 0 0)`
+          layer.style.pointerEvents = frame.reveals[index] > 0 ? "auto" : "none"
+        })
+      }
+      render(0)
+      const trigger = ScrollTrigger.create({
+        id: "project-showcase", trigger: root, pin: true,
+        start: desktop ? "top top" : "center center",
+        end: () => `+=${layers.length * window.innerHeight * (desktop ? 1 : 0.65)}`,
+        invalidateOnRefresh: true, anticipatePin: 1,
+        onUpdate: (self) => render(self.progress), onRefresh: (self) => render(self.progress),
+      })
+      triggerRef.current = trigger
+      const renderEntry = (progress: number) => {
+        if (!section) return
+        // Measure the unpinned stage, not the scroll distance added by its spacer.
+        const stageContainer = root.parentElement?.classList.contains("pin-spacer") ? root.parentElement : root
+        const height = stageContainer.getBoundingClientRect().top - section.getBoundingClientRect().top + root.offsetHeight
+        section.style.clipPath = getShowcaseEntryClip(progress, height)
+      }
+      const entry = section ? ScrollTrigger.create({
+        id: "project-showcase-entry", trigger: section,
+        start: "top bottom", end: () => trigger.start,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => renderEntry(self.progress),
+        onRefresh: (self) => renderEntry(self.progress),
+      }) : null
+      if (entry) renderEntry(entry.progress)
+      return () => {
+        entry?.kill()
+        if (section) section.style.clipPath = ""
+        trigger.kill()
+        triggerRef.current = null
+      }
+    })
+    const refresh = () => ScrollTrigger.refresh()
+    const images = Array.from(root.querySelectorAll("img"))
+    images.forEach((image) => image.addEventListener("load", refresh))
+    void document.fonts.ready.then(() => { if (root.isConnected) ScrollTrigger.refresh() })
+    return () => {
+      images.forEach((image) => image.removeEventListener("load", refresh))
+      media.revert()
+      delete root.dataset.enhanced
+      delete root.dataset.activeProject
+      layers.forEach((layer) => { layer.style.clipPath = ""; layer.style.pointerEvents = "" })
+    }
+  }, [ready, prefersReducedMotion])
+
+  const revealFocusedProject = (index: number) => {
+    const trigger = triggerRef.current
+    if (!trigger) return
+    scrollTo(trigger.start + getProjectFocusProgress(index, projects.length) * (trigger.end - trigger.start), false)
+    ScrollTrigger.update()
+  }
+
   return (
-    <>
-      <DesktopShowcase />
-      <div className="md:hidden">
-        <MobileHorizontalScroll />
-      </div>
-    </>
+    <div ref={rootRef} className="project-showcase" role="region" aria-label="Project showcases">
+      {projects.map((project, index) => (
+        <Link key={project.slug} href={`/work/${project.slug}`} data-project-layer
+          data-project-slug={project.slug} className="project-showcase__layer"
+          style={{ zIndex: index + 1 }} onFocus={() => revealFocusedProject(index)}>
+          <ProjectImage project={project} index={index} />
+        </Link>
+      ))}
+    </div>
   )
 }

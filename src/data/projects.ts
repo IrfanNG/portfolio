@@ -2,6 +2,34 @@ import { Project } from "@/types"
 
 export const projects: Project[] = [
   {
+    title: "DOH Barbershop",
+    slug: "doh-barbershop",
+    category: "Barbershop Brand Website",
+    description:
+      "A neighbourhood barbershop website presenting the DOH brand, services, barbers and locations, with a clear Book a Cut entry point.",
+    techStack: ["Next.js", "React"],
+    image: "/projects/doh-barbershop-showcase.png",
+    previewType: "web",
+    status: "live",
+    role: "",
+    year: "",
+    overview:
+      "DOH Barbershop presents its neighbourhood-first identity through a branded website featuring its story, services, team and locations in Kuala Lumpur and Selangor.",
+    problem:
+      "The website brings the barbershop's brand, service information, team and locations together in one place for visitors to explore.",
+    solution:
+      "A Next.js and React website pairs a green-and-white brand palette with barbershop imagery, prominent typography and navigation to About, Services, Barbers and Locations.",
+    features: [
+      "Branded barbershop landing page",
+      "About and brand-story sections",
+      "Services, barbers and locations navigation",
+      "Book a Cut entry point",
+    ],
+    outcome:
+      "The live website presents DOH's identity and gives visitors a starting point to explore the barbershop and book a cut.",
+    liveUrl: "https://doh-barbershop.irfanariff.com/",
+  },
+  {
     title: "UTP MedTech",
     slug: "utp-medtech",
     category: "Multimedia Production Studio",
@@ -38,7 +66,7 @@ export const projects: Project[] = [
     description:
       "Interactive GSAP-powered creative agency landing page with scroll-triggered animations, custom cursor, and smooth scrolling experience.",
     techStack: ["React", "TypeScript", "Vite", "GSAP", "Lenis"],
-    image: "/projects/noise-agency-showcase.jpg",
+    image: "/projects/noise-agency-showcase.png",
     previewType: "web",
     status: "live",
     role: "Frontend Developer",
@@ -68,7 +96,7 @@ export const projects: Project[] = [
     description:
       "Single-page fashion e-commerce prototype for SVG Worldwide, featuring a streetwear collection, archive storytelling, and interactive shopping UI.",
     techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "Lenis"],
-    image: "/projects/svg-redesign-showcase.jpg",
+    image: "/projects/svg-redesign-showcase.png",
     previewType: "web",
     status: "live",
     role: "Frontend Developer",

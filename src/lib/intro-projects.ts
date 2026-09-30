@@ -23,19 +23,34 @@ export type ProjectArrivalProfile = {
   xFactor: number
   yFactor: number
   scale: number
-  counterX: number
 }
 
 const projectArrivalProfiles: readonly ProjectArrivalProfile[] = [
-  { direction: -1, xFactor: 1, yFactor: 1.04, scale: 0.96, counterX: 8 },
-  { direction: 1, xFactor: 0.92, yFactor: 0.94, scale: 0.97, counterX: -6 },
-  { direction: -1, xFactor: 1.08, yFactor: 1.12, scale: 0.95, counterX: 7 },
-  { direction: 1, xFactor: 0.96, yFactor: 1, scale: 0.96, counterX: -8 },
+  { direction: -1, xFactor: 1, yFactor: 1.04, scale: 1 },
+  { direction: 1, xFactor: 0.92, yFactor: 1, scale: 1 },
+  { direction: -1, xFactor: 1.08, yFactor: 1.12, scale: 1 },
+  { direction: 1, xFactor: 0.96, yFactor: 1.06, scale: 1 },
 ]
 
 export function getProjectArrivalProfile(index: number): ProjectArrivalProfile {
   const profileIndex = Math.abs(Math.trunc(index)) % projectArrivalProfiles.length
   return projectArrivalProfiles[profileIndex]
+}
+
+export function getProjectArrivalState(
+  index: number,
+  viewportHeight: number,
+  stageHeight: number,
+  horizontalTravel: number,
+): ProjectDepthState {
+  const arrival = getProjectArrivalProfile(index)
+
+  return {
+    x: arrival.direction * horizontalTravel * arrival.xFactor,
+    y: (viewportHeight / 2 + stageHeight / 2 + 24) * arrival.yFactor,
+    z: 24,
+    scale: arrival.scale,
+  }
 }
 
 export function getProjectDepthState(

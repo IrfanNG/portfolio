@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { getProjectArrivalProfile, getProjectDepthState, toIntroVisuals } from "./intro-projects.ts"
+import {
+  getProjectArrivalProfile,
+  getProjectArrivalState,
+  getProjectDepthState,
+  toIntroVisuals,
+} from "./intro-projects.ts"
 
 test("intro visuals stay derived from the supplied portfolio projects", () => {
   const projects = [
@@ -40,7 +45,26 @@ test("project arrival origins alternate sides with deterministic variation", () 
   assert.deepEqual(arrivals.map(({ direction }) => direction), [-1, 1, -1, 1])
   assert.notEqual(arrivals[0].xFactor, arrivals[2].xFactor)
   assert.notEqual(arrivals[1].yFactor, arrivals[3].yFactor)
-  assert.ok(arrivals[0].counterX > 0)
-  assert.ok(arrivals[1].counterX < 0)
+  assert.ok(arrivals.every(({ scale }) => scale === 1))
   assert.deepEqual(getProjectArrivalProfile(4), arrivals[0])
+})
+
+test("arriving cards start completely below desktop and mobile viewports", () => {
+  for (const [viewportHeight, stageHeight, horizontalTravel] of [[900, 270, 100], [844, 180, 18]]) {
+    for (let index = 0; index < 4; index++) {
+      const arrival = getProjectArrivalState(index, viewportHeight, stageHeight, horizontalTravel)
+      assert.ok(viewportHeight / 2 + arrival.y - stageHeight * arrival.scale / 2 > viewportHeight)
+      assert.ok(index % 2 === 0 ? arrival.x < 0 : arrival.x > 0)
+      assert.ok(Math.abs(arrival.x) <= horizontalTravel * 1.1)
+      assert.equal(arrival.z, 24)
+    }
+  }
+})
+
+test("compact stacks keep all four cards centered and closely spaced", () => {
+  const compact = { frontY: 0, verticalStep: 8, depthStep: 6, scaleStep: 0.015 }
+  const states = [0, 1, 2, 3].map((depth) => getProjectDepthState(depth, compact))
+  assert.deepEqual(states.map(({ y }) => y), [0, -8, -16, -24])
+  assert.ok(states.every(({ x, scale }) => x === 0 && scale >= 0.95))
+  assert.deepEqual(getProjectDepthState(-1, compact), states[0])
 })

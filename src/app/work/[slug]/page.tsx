@@ -47,10 +47,14 @@ export default async function CaseStudyPage({
                 {project.title}
               </h1>
               <div className="mt-4 flex flex-wrap items-center gap-4 text-xs uppercase tracking-wider text-zinc-600">
-                <span>{project.role}</span>
-                <span className="text-zinc-800">/</span>
-                <span>{project.year}</span>
-                <span className="text-zinc-800">/</span>
+                {project.role && <>
+                  <span>{project.role}</span>
+                  <span className="text-zinc-800">/</span>
+                </>}
+                {project.year && <>
+                  <span>{project.year}</span>
+                  <span className="text-zinc-800">/</span>
+                </>}
                 <span
                   className={
                     project.status === "live"

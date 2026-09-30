@@ -9,7 +9,7 @@ import { useSmoothScroll } from "@/components/providers/smooth-scroll-provider"
 import { profile } from "@/data/profile"
 import { projects } from "@/data/projects"
 import {
-  getProjectArrivalProfile,
+  getProjectArrivalState,
   getProjectDepthState,
   toIntroVisuals,
   type ProjectDepthProfile,
@@ -18,8 +18,6 @@ import {
 gsap.registerPlugin(ScrollTrigger)
 
 const visuals = toIntroVisuals(projects)
-const glideEase = (progress: number) =>
-  progress + 0.3 * progress * (1 - progress) * (2 * progress - 1)
 
 function waitForImage(image: HTMLImageElement) {
   const decode = () => image.decode().catch(() => undefined)
@@ -51,18 +49,15 @@ function IntroLoader({ onComplete }: { onComplete: () => void }) {
     let completed = false
     let timeline: gsap.core.Timeline | undefined
     let readyTimeout: number | undefined
-    let pushScale = 3.4
     let depthProfile: ProjectDepthProfile = {}
     let lateralTravelRatio = 0.15
     let cardTravelRatio = 0.5
     const responsiveMotion = gsap.matchMedia(root)
     responsiveMotion.add("(max-width: 640px)", () => {
-      pushScale = 5
       depthProfile = { frontY: 16, verticalStep: 34, depthStep: 24, scaleStep: 0.06 }
       lateralTravelRatio = 0.07
       cardTravelRatio = 0.18
       return () => {
-        pushScale = 3.4
         depthProfile = {}
         lateralTravelRatio = 0.15
         cardTravelRatio = 0.5
@@ -111,7 +106,7 @@ function IntroLoader({ onComplete }: { onComplete: () => void }) {
       gsap.set([eyebrow, ...supporting, ...navItems].filter(Boolean), { y: 12 })
       gsap.set(headingWords, { yPercent: 110 })
 
-      timeline = gsap.timeline({ paused: true, defaults: { overwrite: "auto" }, onComplete: finish })
+      timeline = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } })
 
       if (reduced) return
 
@@ -158,21 +153,20 @@ function IntroLoader({ onComplete }: { onComplete: () => void }) {
         if (headingWords.length) master.to(headingWords, { autoAlpha: 1, yPercent: 0, duration: 0.16, stagger: 0.015 }, "<")
         if (supporting.length) master.to(supporting, { autoAlpha: 1, y: 0, duration: 0.12, stagger: 0.01 }, "<0.02")
         if (navItems.length) master.to(navItems, { autoAlpha: 1, y: 0, duration: 0.12, stagger: 0.015 }, "<")
+        master.eventCallback("onComplete", finish)
         master.play(0)
         return
       }
 
-      const arrivalDuration = 0.56
-      const projectStagger = 0.3
-      const sequenceSpacing = 0.42
-      const finalSettle = 0.12
+      const arrivalDuration = 0.6
+      const projectStagger = 0.1
       const arrivalSequenceDuration = readyCards.length
-        ? arrivalDuration + (readyCards.length - 1) * sequenceSpacing
-        : 0.42
+        ? arrivalDuration + (readyCards.length - 1) * projectStagger
+        : 0
+      const finalSettle = readyCards.length ? 0.45 : 0
       const stage = root.querySelector<HTMLElement>(".portfolio-intro__stage")
       const stageRect = stage?.getBoundingClientRect()
       const stageHeight = stageRect?.height ?? 400
-      const arrivalDistance = Math.max(120, stageHeight * 0.38)
       const horizontalTravel = Math.min(
         window.innerWidth * lateralTravelRatio,
         (stageRect?.width ?? window.innerWidth * 0.5) * cardTravelRatio,
@@ -187,7 +181,7 @@ function IntroLoader({ onComplete }: { onComplete: () => void }) {
       }, "visual-sequence")
       master.to(counter, {
         value: 100,
-        duration: finalSettle,
+        duration: finalSettle || 0.12,
         ease: "none",
         snap: { value: 1 },
         onUpdate: counterUpdate,
@@ -195,112 +189,71 @@ function IntroLoader({ onComplete }: { onComplete: () => void }) {
 
       readyCards.forEach((card, index) => {
         const startAt = index * projectStagger
-        const cardDuration = arrivalSequenceDuration - startAt
-        const hasFollowingProject = index < readyCards.length - 1
-        const approachDuration = hasFollowingProject
-          ? Math.min(projectStagger, cardDuration * 0.58)
-          : Math.min(0.5, cardDuration * 0.58)
         const at = `visual-sequence+=${startAt}`
-        const front = getProjectDepthState(0, depthProfile)
-        const arrival = getProjectArrivalProfile(index)
-        const finalDepth = readyCards.length - 1 - index
-        const approachState = hasFollowingProject
-          ? {
-              x: 0,
-              y: front.y + arrivalDistance * 0.6,
-              z: front.z - 2,
-              scale: Math.min(0.985, arrival.scale + 0.015),
-            }
-          : {
-              x: 0,
-              y: front.y + 12,
-              z: front.z - 2,
-              scale: 0.99,
-            }
-        const finalState = {
-          ...getProjectDepthState(finalDepth, depthProfile),
-          x: index < readyCards.length - 1
-            ? getProjectArrivalProfile(readyCards.length - 1).counterX
-            : 0,
-        }
-        const incoming = {
-          autoAlpha: 0,
-          x: arrival.direction * horizontalTravel * arrival.xFactor,
-          y: front.y + arrivalDistance * arrival.yFactor,
-          z: front.z - 42,
-          scale: arrival.scale,
-        }
-
-        master.fromTo(card, incoming, {
-          ...approachState,
-          duration: approachDuration,
-          ease: glideEase,
+        const spread = getProjectDepthState(readyCards.length - 1 - index, depthProfile)
+        master.fromTo(card, {
+          ...getProjectArrivalState(index, window.innerHeight, stageHeight, horizontalTravel),
+          autoAlpha: 1,
+        }, {
+          ...spread,
+          duration: arrivalDuration,
+          ease: "power2.out",
           immediateRender: false,
         }, at)
-        master.to(card, {
-          autoAlpha: 1,
-          duration: Math.min(0.09, approachDuration * 0.2),
-          ease: "power1.out",
-        }, at)
-        master.to(card, {
-          ...finalState,
-          duration: cardDuration - approachDuration,
-          ease: glideEase,
-        }, `visual-sequence+=${startAt + approachDuration}`)
       })
-      master.to(readyCards, { x: 0, duration: finalSettle, ease: "none" }, `visual-sequence+=${arrivalSequenceDuration}`)
 
-      master.to({}, { duration: 0.18 })
+      readyCards.forEach((card, index) => {
+        master.to(card, {
+          ...getProjectDepthState(readyCards.length - 1 - index, {
+            frontY: 0,
+            verticalStep: 8,
+            depthStep: 6,
+            scaleStep: 0.015,
+          }),
+          duration: finalSettle,
+          ease: "power2.inOut",
+        }, `visual-sequence+=${arrivalSequenceDuration}`)
+      })
+
+      if (readyCards.length) master.to({}, { duration: 0.25 })
       const exitAt = master.duration()
-      const frontCard = readyCards[readyCards.length - 1]
       if (header) master.to(header, { autoAlpha: 0, y: -8, duration: 0.3, ease: "power2.in" }, exitAt)
-      if (frontCard) {
-        master.to(frontCard, {
-          scale: pushScale,
-          x: 0,
-          y: 0,
-          borderRadius: 0,
-          duration: 0.9,
-          ease: "power4.in",
-        }, exitAt)
-        master.to(frontCard, { autoAlpha: 0, duration: 0.38, ease: "power2.in" }, exitAt + 0.48)
-      }
-      const trailingCards = readyCards.slice(0, -1)
-      if (trailingCards.length) {
-        master.to(trailingCards, {
+      if (readyCards.length) {
+        master.to(readyCards, {
           autoAlpha: 0,
-          scale: 1.08,
-          duration: 0.45,
-          stagger: 0.025,
+          y: "-=18",
+          duration: 0.35,
           ease: "power2.in",
-        }, exitAt + 0.14)
+        }, exitAt)
       }
-      master.to(backdrop, { autoAlpha: 0, duration: 0.72, ease: "power2.inOut" }, exitAt + 0.15)
-      if (ambient) master.to(ambient, { autoAlpha: 1, duration: 0.55, ease: "power2.out" }, exitAt + 0.3)
-      if (eyebrow) master.to(eyebrow, { autoAlpha: 1, y: 0, duration: 0.42, ease: "power3.out" }, exitAt + 0.42)
+      master.to(backdrop, { autoAlpha: 0, duration: 0.6, ease: "power2.inOut" }, exitAt)
+      if (ambient) master.to(ambient, { autoAlpha: 1, duration: 0.6, ease: "power2.out" }, exitAt)
+      if (eyebrow) master.to(eyebrow, { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, exitAt + 0.15)
       if (headingWords.length) master.to(headingWords, {
         autoAlpha: 1,
         yPercent: 0,
-        duration: 0.58,
-        stagger: 0.07,
+        duration: 0.5,
+        stagger: 0.05,
         ease: "power4.out",
-      }, exitAt + 0.48)
+      }, exitAt + 0.2)
       if (supporting.length) master.to(supporting, {
         autoAlpha: 1,
         y: 0,
-        duration: 0.42,
-        stagger: 0.05,
+        duration: 0.35,
+        stagger: 0.04,
         ease: "power3.out",
-      }, exitAt + 0.65)
+      }, exitAt + 0.3)
       if (navItems.length) master.to(navItems, {
         autoAlpha: 1,
         y: 0,
-        duration: 0.38,
-        stagger: 0.04,
+        duration: 0.3,
+        stagger: 0.02,
         ease: "power3.out",
-      }, exitAt + 0.68)
+      }, exitAt + 0.4)
+      master.to({}, { duration: 0.8 }, exitAt)
 
       master.removePause("assets-ready")
+      master.eventCallback("onComplete", finish)
       master.play()
     })
 
@@ -367,8 +320,10 @@ export function PortfolioIntro({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <div id="portfolio-content" aria-busy={active}>
-        {children}
+      <div id="smooth-wrapper">
+        <div id="portfolio-content" aria-busy={active}>
+          {children}
+        </div>
       </div>
       {active && <IntroLoader onComplete={complete} />}
     </>
