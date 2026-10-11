@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { usePathname } from "next/navigation"
-import { Menu, X } from "lucide-react"
+import { ArrowRight, Menu, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { MagneticButton } from "@/components/shared/magnetic-button"
@@ -106,26 +106,17 @@ export function Navbar() {
       <button
         data-intro-nav
         onClick={toggleMobile}
-        className="fixed right-4 top-4 z-50 flex h-11 w-11 items-center justify-center border border-zinc-800 bg-zinc-950 md:hidden"
+        className="group fixed right-4 top-4 z-50 flex h-11 w-11 items-center justify-center border border-zinc-800 bg-zinc-950 transition-colors hover:border-zinc-600 md:hidden"
         aria-label={mobileOpen ? "Close menu" : "Open menu"}
         aria-expanded={mobileOpen}
       >
-        {mobileOpen ? <X className="h-4 w-4 text-zinc-400" /> : <Menu className="h-4 w-4 text-zinc-400" />}
+        {mobileOpen
+          ? <X className="h-4 w-4 text-zinc-400 transition-colors group-hover:text-zinc-100" />
+          : <Menu className="h-4 w-4 text-zinc-400 transition-colors group-hover:text-zinc-100" />}
       </button>
       <AnimatePresence>
         {mobileOpen && (
-          <>
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-30 bg-zinc-950/60 md:hidden"
-              onClick={closeMobile}
-            />
-            <MobileDrawer active={active} onNav={handleNav} onClose={closeMobile} />
-          </>
+          <MobileDrawer active={active} onNav={handleNav} onClose={closeMobile} />
         )}
       </AnimatePresence>
     </>
@@ -265,6 +256,13 @@ function DesktopNav({ active, onNav }: { active: string; onNav: (id: string) => 
   )
 }
 
+// Panel slides in from the right while the inner layer counter-translates, so
+// the content stays put and is revealed edge-first (compositor-only, no clip paint).
+const revealTransition = {
+  duration: 0.5,
+  ease: [0.25, 0.1, 0, 1] as [number, number, number, number],
+}
+
 function MobileDrawer({
   active,
   onNav,
@@ -278,37 +276,53 @@ function MobileDrawer({
     <motion.div
       key="drawer"
       initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "100%" }}
-      transition={{ duration: 0.25, ease: [0.25, 0.1, 0, 1] }}
-      className="fixed inset-y-0 right-0 z-40 flex w-72 flex-col border-l border-zinc-800 bg-zinc-950 md:hidden"
+      animate={{ x: "0%" }}
+      exit={{ opacity: 0, transition: { duration: 0.35 } }}
+      transition={revealTransition}
+      className="fixed inset-0 z-40 overflow-hidden bg-zinc-950/95 md:hidden"
     >
-      <div className="flex flex-1 flex-col justify-center gap-6 px-8">
-        {sections.map((s, i) => (
-          <motion.button
-            key={s.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.04, duration: 0.25 }}
-            onClick={() => {
-              onNav(s.id)
-              onClose()
-            }}
-            className={cn(
-              "text-left text-xl font-bold tracking-tight transition-colors",
-              active === s.id ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-300",
-            )}
-          >
-            {s.label}
-          </motion.button>
-        ))}
-      </div>
+      <motion.div
+        initial={{ x: "-100%" }}
+        animate={{ x: "0%" }}
+        transition={revealTransition}
+        className="flex h-full flex-col"
+      >
+        <div className="flex flex-1 flex-col justify-center px-8">
+          {sections.map((s, i) => {
+            const isActive = active === s.id
+            return (
+              <motion.button
+                key={s.id}
+                initial={{ opacity: 0, x: 32 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.12 + i * 0.07, duration: 0.45, ease: [0.25, 0.1, 0, 1] }}
+                onClick={() => {
+                  onNav(s.id)
+                  onClose()
+                }}
+                className={cn(
+                  "group flex items-center justify-between border-b border-zinc-800/70 py-5 text-left text-4xl font-medium tracking-tight transition-colors duration-300",
+                  isActive ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-100 active:text-zinc-100",
+                )}
+              >
+                {s.label}
+                <ArrowRight
+                  className={cn(
+                    "h-7 w-7 transition-colors duration-300",
+                    isActive ? "text-zinc-100" : "text-zinc-600 group-hover:text-zinc-100 group-active:text-zinc-100",
+                  )}
+                />
+              </motion.button>
+            )
+          })}
+        </div>
 
-      <div className="border-t border-zinc-800 px-8 py-6">
-        <MagneticButton href={waUrl} size="md">
-          Start a Project
-        </MagneticButton>
-      </div>
+        <div className="border-t border-zinc-800 px-8 py-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <MagneticButton href={waUrl} size="md">
+            Start a Project
+          </MagneticButton>
+        </div>
+      </motion.div>
     </motion.div>
   )
 }
