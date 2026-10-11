@@ -15,15 +15,19 @@ gsap.registerPlugin(ScrollTrigger)
 
 function ProjectImage({ project, index }: { project: Project; index: number }) {
   const [failed, setFailed] = useState(false)
-  return failed ? (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-zinc-950 text-zinc-100">
-      <span>{project.title}</span>
-      <span className="text-sm text-zinc-400">Preview unavailable. Open case study.</span>
-    </div>
-  ) : (
-    <Image src={project.image} alt={`${project.title}: view case study`} fill sizes="100vw"
-      loading="eager" fetchPriority={index === 0 ? "high" : "auto"}
-      className="project-showcase__image" onError={() => setFailed(true)} />
+  return (
+    <span className="project-showcase__wipe">
+      {failed ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-zinc-950 text-zinc-100">
+          <span>{project.title}</span>
+          <span className="text-sm text-zinc-400">Preview unavailable. Open case study.</span>
+        </div>
+      ) : (
+        <Image src={project.image} alt={`${project.title}: view case study`} fill
+          loading="eager" fetchPriority={index === 0 ? "high" : "auto"}
+          className="project-showcase__image" onError={() => setFailed(true)} />
+      )}
+    </span>
   )
 }
 
@@ -44,10 +48,11 @@ export function SelectedWorkShowcase() {
       const desktop = Boolean(context.conditions?.desktop)
       const render = (progress: number) => {
         const frame = getShowcaseFrame(progress, layers.length)
-        root.dataset.activeProject = String(frame.activeIndex)
         layers.forEach((layer, index) => {
-          layer.style.clipPath = `inset(${(1 - frame.reveals[index]) * 100}% 0 0 0)`
-          layer.style.pointerEvents = frame.reveals[index] > 0 ? "auto" : "none"
+          const reveal = String(frame.reveals[index])
+          if (layer.style.getPropertyValue("--reveal") !== reveal) {
+            layer.style.setProperty("--reveal", reveal)
+          }
         })
       }
       render(0)
@@ -59,19 +64,22 @@ export function SelectedWorkShowcase() {
         onUpdate: (self) => render(self.progress), onRefresh: (self) => render(self.progress),
       })
       triggerRef.current = trigger
+      let entryHeight = 0
       const renderEntry = (progress: number) => {
         if (!section) return
-        // Measure the unpinned stage, not the scroll distance added by its spacer.
-        const stageContainer = root.parentElement?.classList.contains("pin-spacer") ? root.parentElement : root
-        const height = stageContainer.getBoundingClientRect().top - section.getBoundingClientRect().top + root.offsetHeight
-        section.style.clipPath = getShowcaseEntryClip(progress, height)
+        if (progress < 1 && !entryHeight && !trigger.isActive) {
+          // Measure the unpinned stage, not the scroll distance added by its spacer.
+          const stageContainer = root.parentElement?.classList.contains("pin-spacer") ? root.parentElement : root
+          entryHeight = stageContainer.getBoundingClientRect().top - section.getBoundingClientRect().top + root.offsetHeight
+        }
+        section.style.clipPath = getShowcaseEntryClip(progress, entryHeight)
       }
       const entry = section ? ScrollTrigger.create({
         id: "project-showcase-entry", trigger: section,
         start: "top bottom", end: () => trigger.start,
         invalidateOnRefresh: true,
         onUpdate: (self) => renderEntry(self.progress),
-        onRefresh: (self) => renderEntry(self.progress),
+        onRefresh: (self) => { entryHeight = 0; renderEntry(self.progress) },
       }) : null
       if (entry) renderEntry(entry.progress)
       return () => {
@@ -89,8 +97,7 @@ export function SelectedWorkShowcase() {
       images.forEach((image) => image.removeEventListener("load", refresh))
       media.revert()
       delete root.dataset.enhanced
-      delete root.dataset.activeProject
-      layers.forEach((layer) => { layer.style.clipPath = ""; layer.style.pointerEvents = "" })
+      layers.forEach((layer) => layer.style.removeProperty("--reveal"))
     }
   }, [ready, prefersReducedMotion])
 

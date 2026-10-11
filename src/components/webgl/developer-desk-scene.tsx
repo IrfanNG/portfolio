@@ -137,6 +137,7 @@ function LiquidChrome() {
   )
 
   const mouseRef = useRef(new THREE.Vector2(0, 0))
+  const timeRef = useRef(0)
 
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry()
@@ -145,11 +146,14 @@ function LiquidChrome() {
     return geo
   }, [])
 
-  useFrame(({ pointer, size, clock }) => {
+  useFrame(({ pointer, size }, delta) => {
     const mat = materialRef.current
     if (!mat) return
 
-    mat.uniforms.uTime.value = clock.elapsedTime
+    // Accumulate delta instead of using clock.elapsedTime so pausing the
+    // frameloop (hero offscreen) resumes the animation phase seamlessly.
+    timeRef.current += delta
+    mat.uniforms.uTime.value = timeRef.current
     mouseRef.current.lerp(new THREE.Vector2(pointer.x, pointer.y), 0.05)
     mat.uniforms.uMouse.value.copy(mouseRef.current)
     mat.uniforms.uResolution.value.set(size.width, size.height)

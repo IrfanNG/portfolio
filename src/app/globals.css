@@ -204,6 +204,10 @@ main {
   outline-offset: -5px;
 }
 
+.project-showcase__wipe {
+  display: contents;
+}
+
 .project-showcase__image {
   object-fit: contain;
 }
@@ -217,10 +221,28 @@ main {
   inset: 0;
   height: 100%;
   aspect-ratio: auto;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Compositor-only wipe: the window slides up while the image counter-shifts,
+   keeping the image static on screen. --reveal (0-1) is set per layer in JS. */
+.project-showcase[data-enhanced="true"] .project-showcase__wipe {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  background: #09090b;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translate3d(0, calc((var(--reveal, 1) - 1) * 100%), 0);
+  will-change: transform;
 }
 
 .project-showcase[data-enhanced="true"] .project-showcase__image {
   object-fit: contain;
+  transform: translate3d(0, calc((1 - var(--reveal, 1)) * 100%), 0);
+  will-change: transform;
 }
 
 @media (max-width: 767px), (pointer: coarse) {

@@ -8,7 +8,7 @@ export const projects: Project[] = [
     description:
       "A neighbourhood barbershop website presenting the DOH brand, services, barbers and locations, with a clear Book a Cut entry point.",
     techStack: ["Next.js", "React"],
-    image: "/projects/doh-barbershop-showcase.png",
+    image: "/projects/doh-barbershop-showcase.webp",
     previewType: "web",
     status: "live",
     role: "",
@@ -36,7 +36,7 @@ export const projects: Project[] = [
     description:
       "Corporate website for UTP MedTech Crew — a multimedia production studio covering photography, videography, live streaming, and end-to-end event solutions for leading organizations.",
     techStack: ["React", "TypeScript", "Vite", "Supabase", "Framer Motion"],
-    image: "/projects/medtech-showcase.png",
+    image: "/projects/medtech-showcase.webp",
     previewType: "web",
     status: "live",
     role: "Frontend Developer",
@@ -66,7 +66,7 @@ export const projects: Project[] = [
     description:
       "Interactive GSAP-powered creative agency landing page with scroll-triggered animations, custom cursor, and smooth scrolling experience.",
     techStack: ["React", "TypeScript", "Vite", "GSAP", "Lenis"],
-    image: "/projects/noise-agency-showcase.png",
+    image: "/projects/noise-agency-showcase.webp",
     previewType: "web",
     status: "live",
     role: "Frontend Developer",
@@ -96,7 +96,7 @@ export const projects: Project[] = [
     description:
       "Single-page fashion e-commerce prototype for SVG Worldwide, featuring a streetwear collection, archive storytelling, and interactive shopping UI.",
     techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "Lenis"],
-    image: "/projects/svg-redesign-showcase.png",
+    image: "/projects/svg-redesign-showcase.webp",
     previewType: "web",
     status: "live",
     role: "Frontend Developer",
@@ -126,7 +126,7 @@ export const projects: Project[] = [
     description:
       "Website for UTP EVEX Club, supporting Event, Conference & Visit Management through student-led planning, creative production, and on-ground coordination.",
     techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "Lenis"],
-    image: "/projects/evex-utp-showcase.jpg",
+    image: "/projects/evex-utp-showcase.webp",
     previewType: "web",
     status: "live",
     role: "Frontend Developer",

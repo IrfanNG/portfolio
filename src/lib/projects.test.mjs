@@ -12,7 +12,7 @@ const { projects } = await import(`data:text/javascript;base64,${Buffer.from(out
 test("DOH leads the shared showcase and intro data before the existing projects", () => {
   assert.deepEqual(projects.map(project => project.slug), ["doh-barbershop", "utp-medtech", "noise-agency", "svg-redesign", "evex-utp"])
   assert.equal(projects[0].liveUrl, "https://doh-barbershop.irfanariff.com/")
-  assert.equal(projects[0].image, "/projects/doh-barbershop-showcase.png")
+  assert.equal(projects[0].image, "/projects/doh-barbershop-showcase.webp")
   assert.equal(toIntroVisuals(projects)[0].slug, "doh-barbershop")
 })
 

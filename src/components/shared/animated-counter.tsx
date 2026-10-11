@@ -5,7 +5,6 @@ import { useReducedMotion } from "@/components/providers/reduced-motion-provider
 
 export function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null)
-  const [display, setDisplay] = useState(0)
   const [done, setDone] = useState(false)
   const { prefersReducedMotion } = useReducedMotion()
 
@@ -13,6 +12,7 @@ export function AnimatedCounter({ target, suffix = "" }: { target: number; suffi
     const el = ref.current
     if (!el || prefersReducedMotion) return
 
+    let frame = 0
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return
@@ -22,18 +22,21 @@ export function AnimatedCounter({ target, suffix = "" }: { target: number; suffi
           const elapsed = now - start
           const progress = Math.min(elapsed / duration, 1)
           const eased = 1 - Math.pow(1 - progress, 3)
-          setDisplay(Math.round(eased * target))
+          if (ref.current) ref.current.textContent = String(Math.round(eased * target))
           if (progress >= 1) setDone(true)
-          if (progress < 1) requestAnimationFrame(tick)
+          else frame = requestAnimationFrame(tick)
         }
-        requestAnimationFrame(tick)
+        frame = requestAnimationFrame(tick)
         observer.disconnect()
       },
       { threshold: 0.5 },
     )
 
     observer.observe(el)
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
+    }
   }, [target, prefersReducedMotion])
 
   if (prefersReducedMotion) {
@@ -41,8 +44,8 @@ export function AnimatedCounter({ target, suffix = "" }: { target: number; suffi
   }
 
   return (
-    <span ref={ref}>
-      {display}
+    <span>
+      <span ref={ref}>0</span>
       {done && suffix}
     </span>
   )
